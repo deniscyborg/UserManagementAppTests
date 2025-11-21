@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # только ubuntu-latest для Docker!
 
     services:
       db:
@@ -31,13 +31,13 @@ jobs:
         run: docker-compose -f ./backend/docker-compose.yml up -d
 
       - name: Wait for backend to start
-        run: pwsh -Command "Start-Sleep -Seconds 10"
+        run: sleep 10
 
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
       - name: Playwright Install Browsers
-        run: pwsh -Command "playwright install"
+        run: npx playwright install
 
       - name: Build project
         run: dotnet build tests/tests.csproj --no-restore
