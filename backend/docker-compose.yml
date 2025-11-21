@@ -8,7 +8,6 @@ services:
       - ASPNETCORE_URLS=http://+:80
     depends_on:
       - db
-
   frontend:
     build:
       context: ../frontend
