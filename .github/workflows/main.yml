@@ -1,4 +1,4 @@
-name: .NET Build & Test
+name: .NET Build & Test (with Docker backend)
 
 on:
   push:
@@ -9,6 +9,16 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+
+    services:
+      db:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        ports:
+          - 1433:1433
+        env:
+          SA_PASSWORD: "Your_password123"
+          ACCEPT_EULA: "Y"
+
     steps:
       - uses: actions/checkout@v3
 
@@ -16,6 +26,12 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
+
+      - name: Build & Run backend via Docker Compose
+        run: docker-compose -f ./backend/docker-compose.yml up -d
+
+      - name: Wait for backend to start
+        run: pwsh -Command "Start-Sleep -Seconds 10"
 
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
