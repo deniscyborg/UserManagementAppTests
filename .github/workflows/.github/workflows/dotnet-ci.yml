@@ -1,0 +1,35 @@
+name: CI Build & Test (.NET + Playwright)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Установить .NET 8
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+      
+      # Если в тестах используется Playwright, иногда нужен install
+      - name: Playwright Install
+        run: pwsh tests/playwright.ps1
+        continue-on-error: true
+
+      - name: Restore dependencies (указываем путь к проекту)
+        run: dotnet restore tests/tests.csproj
+
+      - name: Build
+        run: dotnet build tests/tests.csproj --no-restore
+
+      - name: Run tests
+        run: dotnet test tests/tests.csproj --no-build --verbosity normal
