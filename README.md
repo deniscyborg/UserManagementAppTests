@@ -1,3 +1,9 @@
+# UserManagementApp Автотесты
+
+![Build Status](https://github.com/deniscyborg/UserManagementAppTests/actions/workflows/dotnet-allure.yml/badge.svg)
+
+
+
 1. Структура проекта автотестов
 
 tests/
