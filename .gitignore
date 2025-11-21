@@ -1,0 +1,36 @@
+# Build results / bin/obj
+bin/
+obj/
+
+# User-specific files / IDE configs
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code / Rider
+.vscode/
+.idea/
+
+# Playwright downloads (browsers, trace files)
+Playwright/*-report/
+pw-output/
+pw-results/
+test-results/
+trace.zip
+
+# Node modules (если используешь JS Runner/TypeScript)
+node_modules/
+
+# Test configs/environment
+appsettings.Local.json
+.env
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Others
