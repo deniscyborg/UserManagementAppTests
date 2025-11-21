@@ -28,7 +28,8 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Build & Run backend via Docker Compose
-        run: docker-compose -f ./backend/docker-compose.yml up -d
+        run: docker compose -f ./backend/docker-compose.yml up -d
+
 
       - name: Wait for backend to start
         run: sleep 10
