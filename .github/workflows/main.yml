@@ -1,15 +1,6 @@
-name: .NET Build & Test (with Docker backend)
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 jobs:
   build:
-    runs-on: ubuntu-latest  # только ubuntu-latest для Docker!
-
+    runs-on: ubuntu-latest
     services:
       db:
         image: mcr.microsoft.com/mssql/server:2019-latest
@@ -27,20 +18,38 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build # если у тебя предусмотрен build-скрипт
+
+      - name: Start frontend (background)
+        working-directory: ./frontend
+        run: |
+          nohup npm run dev -- --host &
+          sleep 10
+
       - name: Build & Run backend via Docker Compose
         run: docker compose -f ./backend/docker-compose.yml up -d
-
 
       - name: Wait for backend to start
         run: sleep 10
 
-      - name: Restore dependencies
+      - name: Restore test project dependencies
         run: dotnet restore tests/tests.csproj
 
       - name: Playwright Install Browsers
         run: npx playwright install
 
-      - name: Build project
+      - name: Build test project
         run: dotnet build tests/tests.csproj --no-restore
 
       - name: Run tests
