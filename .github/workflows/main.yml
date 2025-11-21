@@ -20,6 +20,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
+      - name: Playwright Install Browsers
+        run: pwsh -Command "playwright install"
+
       - name: Build project
         run: dotnet build tests/tests.csproj --no-restore
 
