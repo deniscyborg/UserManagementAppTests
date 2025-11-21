@@ -1,6 +1,5 @@
-UserManagementApp Автотесты
 1. Структура проекта автотестов
-text
+
 tests/
 ├── PageObjects/         # Page Object-модели для UI-страниц (пример: UserGridPage)
 ├── Tests/               # Тестовые классы (UI и API)
@@ -8,15 +7,16 @@ tests/
 ├── TestConfig.cs        # Загрузка env-переменных и конфиг
 ├── README.md            # Описание и инструкции запуска
 ├── tests.csproj         # Проект автотестов (C#)
+
 PageObjects/ — содержит классы, реализующие работу с конкретными страницами.
 
-Tests/ — классы автотестов: API и UI.
+Tests/ — классы автотестов: API и UI.
 
-appsettings.json — факультативный: хранит значения BASE_URL, BROWSER, REMOTE.
+appsettings.json — хранит значения BASE_URL, BROWSER, REMOTE.
 
-TestConfig.cs — логика загрузки переменных окружения/config.
+TestConfig.cs — загрузка переменных окружения/config.
 
-README.md — краткая документация.
+README.md — краткая документация.
 
 tests.csproj — C# проект автотестов.
 
@@ -40,15 +40,14 @@ public class UserGridPage
     }
 }
 
-
 3. Инструкции запуска
-	1. Установить зависимости:
+Установить зависимости:
 
 .NET 8 SDK
 
 Playwright (Автоматически ставится при первом запуске тестов: playwright install)
 
-	2. Требуемые переменные окружения:
+Требуемые переменные окружения:
 
 BASE_URL — адрес Frontend-сервера, например: http://localhost:5173
 
@@ -56,19 +55,17 @@ BROWSER — браузер для запуска тестов (chromium / firefo
 
 REMOTE — (опционально) URL Selenium Grid/удалённого раннера
 
-Можно задать значения через appsettings.json или через переменные окружения.
+Можно задать значения через appsettings.json или переменные окружения.
 
-3. Запуск тестов:
+Запуск тестов:
 
 dotnet test
 
 Для отдельных тестов:
 
-
 dotnet test --filter "FullyQualifiedName~Tests.ApiUserTests"
 
 4. Краткий план автоматизации
-
 В первую очередь покрываются:
 
 API-тесты: создание, чтение, изменение и удаление пользователя (CRUD).
