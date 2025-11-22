@@ -30,6 +30,9 @@ jobs:
 
       - name: Run tests and generate Allure results
         env:
+          BASE_URL: "http://deploy-host:5173"
+          API_BASE_URL: "http://deploy-host:5006/api"
+          BROWSER: "chromium"
           ALLURE_RESULTS_DIRECTORY: allure-results
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
 
