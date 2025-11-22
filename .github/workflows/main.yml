@@ -14,17 +14,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ОСТАВЬ ТУ, ЧТО НУЖНА ТЕБЕ В ТЕСТОВОМ ПРОЕКТЕ (РЕКОМЕНДУЮ .NET 6)
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '6.0.x'
 
-      # Принудительно устанавливаем требуемую версию Allure.NUnit (например, 2.13.8, если она доступна)
-      - name: Install exact Allure.NUnit version
-        run: dotnet add tests/tests.csproj package Allure.NUnit --version 2.13.8
+      - name: Install Allure.NUnit (актуальная версия)
+        run: dotnet add tests/tests.csproj package Allure.NUnit
 
-      # Дальше restore/build/run как обычно
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
@@ -33,6 +30,9 @@ jobs:
 
       - name: Run tests and generate Allure results
         env:
+          BASE_URL: "http://deploy-host:5173"
+          API_BASE_URL: "http://deploy-host:5006/api"
+          BROWSER: "chromium"
           ALLURE_RESULTS_DIRECTORY: allure-results
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
 
