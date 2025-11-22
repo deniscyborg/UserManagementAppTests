@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PageObjects
@@ -7,16 +8,19 @@ namespace PageObjects
     {
         public UserGridPage(IPage page) : base(page) { }
 
-        public async Task GoToAsync(string baseUrl)
-            => await Page.GotoAsync(baseUrl + "/users");
+        // ...остальные методы...
 
-        public async Task<bool> IsUserPresentAsync(string userName)
-            => await Page.IsVisibleAsync($"text={userName}");
+        public async Task<IReadOnlyList<string>> GetAllUserNamesAsync()
+        {
+            // Пример: вытащить все имена пользователей из таблицы с классом user-grid
+            var elements = await Page.QuerySelectorAllAsync("table.user-grid tr td.username");
+            var names = new List<string>();
 
-        public async Task ClickEditUserAsync(string userName)
-            => await Page.ClickAsync($"xpath=//tr[td[text()='{userName}']]//button[@class='edit']");
-
-        public async Task DeleteUserAsync(string userName)
-            => await Page.ClickAsync($"xpath=//tr[td[text()='{userName}']]//button[@class='delete']");
+            foreach (var el in elements)
+            {
+                names.Add(await el.InnerTextAsync());
+            }
+            return names;
+        }
     }
 }
