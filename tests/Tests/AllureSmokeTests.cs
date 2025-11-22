@@ -3,16 +3,15 @@ using Allure.NUnit.Attributes;
 
 namespace Tests
 {
-    [AllureNUnit]
     [AllureSuite("Allure Smoke")]
     public class AllureSmokeTests
     {
         [Test]
         [AllureTag("smoke")]
-        [AllureSeverity(Allure.NUnit.Attributes.SeverityLevel.normal)]
-        public void CanGenerateAllureArtifacts()
+        [AllureSeverity(AllureSeverityLevel.normal)]
+        public void MinimalAllureTest()
         {
-            Assert.Pass("Минимальный тест для проверки Allure");
+            Assert.Pass("Success!");
         }
     }
 }
