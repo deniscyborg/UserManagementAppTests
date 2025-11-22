@@ -1,12 +1,19 @@
 using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
+using Allure.NUnit.Attributes;           // <--- Добавлено
+using Allure.Net.Commons;                // <--- Добавлено
 using System.Threading.Tasks;
 
 namespace Tests
 {
+    [AllureSuite("UI: Users Page")]      // <--- Название группы тестов для отчёта
     public class UsersTests : PageTest
     {
         [Test]
+        [AllureTag("ui", "users", "crud")]              // <--- Теги для фильтрации отчёта
+        [AllureSeverity(SeverityLevel.critical)]        // <--- Важность теста
+        [AllureOwner("denis")]                          // <--- Автор теста (опционально)
+        [AllureStory("Add, edit, delete user")]         // <--- Краткое описание сценария
         public async Task AddEditDeleteUser()
         {
             await Page.GotoAsync("http://localhost:5173");

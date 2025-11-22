@@ -1,12 +1,9 @@
-using Microsoft.Playwright;
-
-public class UsersPage
+[Test]
+[AllureTag("ui", "users", "page-object")]
+[AllureSeverity(SeverityLevel.normal)]
+public async Task EditUserTest()
 {
-    private readonly IPage _page;
-    public UsersPage(IPage page) => _page = page;
-
-    public ILocator AddUserButton => _page.Locator("button:has-text('Добавить пользователя')");
-    public ILocator FilterInput => _page.Locator("input[placeholder='Фильтр по логину']");
-    public ILocator FirstEditButton => _page.Locator("button:has-text('Редактировать')").First;
-    public ILocator UserRows => _page.Locator("table tbody tr");
+    var usersPage = new UsersPage(Page);
+    await usersPage.FirstEditButton.ClickAsync();
+    // ...
 }

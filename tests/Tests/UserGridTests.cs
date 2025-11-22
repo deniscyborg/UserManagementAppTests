@@ -3,9 +3,12 @@ using Microsoft.Playwright;
 using PageObjects;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Allure.NUnit.Attributes;           // <--- Добавлено
+using Allure.Net.Commons;                // <--- Добавлено
 
 namespace Tests
 {
+    [AllureSuite("UI: User Grid")]       // <--- Название группы тестов для отчёта
     public class UserGridTests
     {
         private IPlaywright _playwright;
@@ -28,6 +31,10 @@ namespace Tests
         }
 
         [Test]
+        [AllureTag("ui", "grid", "users")]                  // <--- Теги для Allure
+        [AllureSeverity(SeverityLevel.normal)]              // <--- Важность теста
+        [AllureOwner("denis")]                              // <--- Автор теста (по желанию)
+        [AllureStory("View user names in grid")]            // <--- Описание сценария
         public async Task CanSeeUsersInGrid()
         {
             var page = await _browser.NewPageAsync();

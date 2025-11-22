@@ -29,8 +29,10 @@ namespace Tests
         }
 
         [Test]
-        [AllureTag("api", "smoke")]
-        [AllureSeverity(SeverityLevel.critical)]
+        [AllureTag("api", "smoke", "add-user")]           // <--- Теги для фильтрации
+        [AllureSeverity(SeverityLevel.critical)]          // <--- Важность теста
+        [AllureOwner("denis")]                            // <--- Автор теста (дополнительно)
+        [AllureStory("Create user via API")]              // <--- Описание тест-сценария
         public async Task CanAddUserViaApi()
         {
             var user = new { name = "APIТест", surname = "Тестов", email = "apitest@test.ru" };

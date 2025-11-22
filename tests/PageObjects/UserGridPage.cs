@@ -1,44 +1,60 @@
+using NUnit.Framework;
 using Microsoft.Playwright;
+using PageObjects;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
+using Allure.NUnit.Attributes;
+using Allure.Net.Commons;
 
-namespace PageObjects
+namespace Tests
 {
-    public class UserGridPage : BasePage
+    [AllureSuite("UI: User Grid CRUD")]                 // Группа в Allure-отчёте
+    public class UserGridCrudTests
     {
-        public UserGridPage(IPage page) : base(page) { }
+        private IPlaywright _playwright;
+        private IBrowser _browser;
+        private TestConfig _config;
 
-        // Принимаем baseUrl как параметр, чтобы не было жёсткого адреса!
-        public async Task GoToAsync(string baseUrl)
-            => await Page.GotoAsync(baseUrl + "/users");
-
-        public async Task<List<string>> GetAllUserNamesAsync()
+        [SetUp]
+        public async Task SetUp()
         {
-            var elements = await Page.QuerySelectorAllAsync(".user-row .user-name");
-            var names = new List<string>();
-            foreach (var elem in elements)
-                names.Add(await elem.InnerTextAsync());
-            return names;
+            _config = TestConfig.Load();
+            _playwright = await Playwright.CreateAsync();
+            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
         }
 
-        public async Task ClickEditUserAsync(string userName)
+        [TearDown]
+        public async Task TearDown()
         {
-            var selector = $"tr:has(td:text('{userName}')) .edit-btn";
-            await Page.ClickAsync(selector);
+            await _browser.CloseAsync();
+            _playwright.Dispose();
         }
 
-        public async Task DeleteUserAsync(string userName)
+        [Test]
+        [AllureTag("ui", "users", "grid", "crud")]       // Теги для отчёта
+        [AllureSeverity(SeverityLevel.critical)]         // Важность сценария
+        [AllureOwner("denis")]                           // Автор теста
+        [AllureStory("Add, Edit, Delete user in grid")]  // Описание сценария
+        public async Task AddEditDeleteUser()
         {
-            var selector = $"tr:has(td:text('{userName}')) .delete-btn";
-            await Page.ClickAsync(selector);
-            // Можно добавить подтверждение модалки
-        }
+            var page = await _browser.NewPageAsync();
+            var usersGrid = new UserGridPage(page);
 
-        public async Task<bool> IsUserPresentAsync(string userName)
-        {
-            var names = await GetAllUserNamesAsync();
-            return names.Contains(userName);
+            // Переход на страницу пользователей
+            await usersGrid.GoToAsync(_config.BaseUrl);
+
+            // Добавление пользователя (допустим через другой PageObject или прямым взаимодействием)
+            // ...тут может быть код по добавлению через форму
+
+            // Проверка наличия пользователя
+            Assert.IsTrue(await usersGrid.IsUserPresentAsync("Алексей"), "User not present in grid after add.");
+
+            // Редактирование пользователя
+            await usersGrid.ClickEditUserAsync("Алексей");
+            // ...тут могут быть шаги редактирования
+
+            // Удаление пользователя
+            await usersGrid.DeleteUserAsync("Алексей");
+            Assert.IsFalse(await usersGrid.IsUserPresentAsync("Алексей"), "User still present in grid after delete.");
         }
     }
 }

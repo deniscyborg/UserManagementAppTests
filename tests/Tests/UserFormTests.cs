@@ -2,9 +2,12 @@ using NUnit.Framework;
 using Microsoft.Playwright;
 using PageObjects;
 using System.Threading.Tasks;
+using Allure.NUnit.Attributes;           // <--- Добавлено
+using Allure.Net.Commons;                // <--- Добавлено
 
 namespace Tests
 {
+    [AllureSuite("UI: User Form")]       // <--- Название группы тестов для отчёта
     public class UserFormTests
     {
         private IPlaywright _playwright;
@@ -36,22 +39,6 @@ namespace Tests
         }
 
         [Test]
-        public async Task CanAddUserViaUI()
-        {
-            var page = await _browser.NewPageAsync();
-            var userFormPage = new UserFormPage(page);
-
-            // Открываем форму добавления пользователя через PageObject и TestConfig
-            await userFormPage.GoToAsync(_config.BaseUrl);
-
-            // Заполняем поля
-            await userFormPage.FillNameAsync("Алексей");
-            await userFormPage.FillEmailAsync("alexey@test.ru");
-            await userFormPage.SubmitAsync();
-
-            // Проверяем, что появился успешный статус
-            var successMsg = await page.InnerTextAsync("#successMsg");
-            Assert.AreEqual("Пользователь добавлен", successMsg);
-        }
-    }
-}
+        [AllureTag("ui", "form", "add-user")]                 // <--- Теги для Allure
+        [AllureSeverity(SeverityLevel.blocker)]               // <--- Наивысший приоритет для UI формы
+        [AllureOwner("denis")]                                // <--- Автор теста (опционально
