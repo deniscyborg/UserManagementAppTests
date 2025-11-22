@@ -1,3 +1,11 @@
+name: .NET Build & Test (with Docker backend)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,6 +19,10 @@ jobs:
           ACCEPT_EULA: "Y"
 
     steps:
+    
+      - name: Stop existing containers (cleanup)
+        run: docker compose -f ./backend/docker-compose.yml down || true
+  
       - uses: actions/checkout@v3
 
       - name: Setup .NET
@@ -30,12 +42,6 @@ jobs:
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build # если у тебя предусмотрен build-скрипт
-
-      - name: Start frontend (background)
-        working-directory: ./frontend
-        run: |
-          nohup npm run dev -- --host &
-          sleep 10
 
       - name: Build & Run backend via Docker Compose
         run: docker compose -f ./backend/docker-compose.yml up -d
