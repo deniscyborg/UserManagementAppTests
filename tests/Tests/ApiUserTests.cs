@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Tests
 {
-    [AllureNUnit]
     [AllureSuite("User API")]
     public class ApiUserTests
     {
@@ -30,7 +29,7 @@ namespace Tests
 
         [Test]
         [AllureTag("api", "smoke")]
-        [AllureSeverity(SeverityLevel.critical)]   // <--- так!
+        [AllureSeverity(AllureSeverityLevel.critical)]
         public async Task CanAddUserViaApi()
         {
             var user = new { name = "APIТест", surname = "Тестов", email = "apitest@test.ru" };
