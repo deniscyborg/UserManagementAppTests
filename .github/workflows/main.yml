@@ -14,17 +14,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ОСТАВЬ ТУ, ЧТО НУЖНА ТЕБЕ В ТЕСТОВОМ ПРОЕКТЕ (РЕКОМЕНДУЮ .NET 6)
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '6.0.x'
 
-      # Принудительно устанавливаем требуемую версию Allure.NUnit
       - name: Install Allure.NUnit (актуальная версия)
-         run: dotnet add tests/tests.csproj package Allure.NUnit
+        run: dotnet add tests/tests.csproj package Allure.NUnit
 
-      # Дальше restore/build/run как обычно
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
