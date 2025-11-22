@@ -1,58 +1,58 @@
-name: .NET Build & Test (with Docker backend)
+name: .NET CI - Allure
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-    
+    branches: [main]
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-    services:
-      db:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        ports:
-          - 1433:1433
-        env:
-          SA_PASSWORD: "Your_password123"
-          ACCEPT_EULA: "Y"
 
     steps:
-      - name: Stop existing containers (cleanup)
-        run: docker compose -f ./backend/docker-compose.yml down || true
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - uses: actions/checkout@v3
-
+      # ОСТАВЬ ТУ, ЧТО НУЖНА ТЕБЕ В ТЕСТОВОМ ПРОЕКТЕ (РЕКОМЕНДУЮ .NET 6)
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '6.0.x'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+      # Принудительно устанавливаем требуемую версию Allure.NUnit (например, 2.13.8, если она доступна)
+      - name: Install exact Allure.NUnit version
+        run: dotnet add tests/tests.csproj package Allure.NUnit --version 2.13.8
 
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build # если у тебя предусмотрен build-скрипт
-
-      - name: Build & Run backend via Docker Compose
-        run: docker compose -f ./backend/docker-compose.yml up -d
-
-      - name: Wait for backend to start
-        run: sleep 10
-
-      - name: Restore test project dependencies
+      # Дальше restore/build/run как обычно
+      - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
-      - name: Playwright Install Browsers
-        run: npx playwright install
-
-      - name: Build test project
+      - name: Build tests
         run: dotnet build tests/tests.csproj --no-restore
+
+      - name: Run tests and generate Allure results
+        env:
+          ALLURE_RESULTS_DIRECTORY: allure-results
+        run: dotnet test tests/tests.csproj --no-build --verbosity normal
+
+      - name: Upload Allure results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Install Allure CLI
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
+          unzip allure-2.27.0.zip -d /opt/
+          ln -s /opt/allure-2.27.0/bin/allure /usr/bin/allure
+
+      - name: Generate Allure HTML report
+        run: allure generate allure-results -o allure-report
+
+      - name: Upload Allure HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
