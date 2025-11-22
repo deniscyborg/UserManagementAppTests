@@ -1,51 +1,22 @@
-using NUnit.Framework;
 using Microsoft.Playwright;
-using PageObjects;
 using System.Threading.Tasks;
-using Allure.NUnit.Attributes;
-using Allure.Net.Commons;
 
-namespace Tests
+namespace PageObjects
 {
-    [AllureSuite("UI: User Form")]
-    public class UserFormTests
+    public class UserFormPage : BasePage
     {
-        private IPlaywright _playwright;
-        private IBrowser _browser;
-        private TestConfig _config;
+        public UserFormPage(IPage page) : base(page) { }
 
-        [SetUp]
-        public async Task SetUp()
-        {
-            _config = TestConfig.Load();
-            _playwright = await Playwright.CreateAsync();
-            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-        }
+        public async Task GoToAsync(string baseUrl)
+            => await Page.GotoAsync(baseUrl + "/users/add");
 
-        [TearDown]
-        public async Task TearDown()
-        {
-            await _browser.CloseAsync();
-            _playwright.Dispose();
-        }
+        public async Task FillNameAsync(string name)
+            => await Page.FillAsync("input[name='name']", name);
 
-        [Test]
-        [AllureTag("ui", "form", "add-user")]
-        [AllureSeverity(SeverityLevel.blocker)]
-        [AllureOwner("denis")]
-        [AllureStory("Add user via UI form")]
-        public async Task CanAddUserViaUI()
-        {
-            var page = await _browser.NewPageAsync();
-            var userFormPage = new UserFormPage(page);
+        public async Task FillEmailAsync(string email)
+            => await Page.FillAsync("input[name='email']", email);
 
-            await userFormPage.GoToAsync(_config.BaseUrl);
-            await userFormPage.FillNameAsync("Алексей");
-            await userFormPage.FillEmailAsync("alexey@test.ru");
-            await userFormPage.SubmitAsync();
-
-            var successMsg = await page.InnerTextAsync("#successMsg");
-            Assert.AreEqual("Пользователь добавлен", successMsg);
-        }
+        public async Task SubmitAsync()
+            => await Page.ClickAsync("button[type='submit']");
     }
 }
