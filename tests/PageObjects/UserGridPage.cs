@@ -1,6 +1,7 @@
 using Microsoft.Playwright;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq; // для метода Contains
 
 namespace PageObjects
 {
@@ -11,20 +12,24 @@ namespace PageObjects
         public async Task GoToAsync(string baseUrl)
             => await Page.GotoAsync(baseUrl + "/users");
 
-        public async Task<IReadOnlyList<string>> GetAllUserLoginsAsync()
+        // Для тестов, которым нужен GetAllUserNamesAsync
+        public async Task<IReadOnlyList<string>> GetAllUserNamesAsync()
         {
-            // Вытаскиваем логины из первой колонки таблицы
+            // Берём логины, как уникальные "имена" в твоей таблице
             var elements = await Page.QuerySelectorAllAsync("table.user-table tbody tr td:nth-child(1)");
-            var logins = new List<string>();
+            var names = new List<string>();
             foreach (var el in elements)
-                logins.Add(await el.InnerTextAsync());
-            return logins;
+                names.Add(await el.InnerTextAsync());
+            return names;
         }
+
+        // Оставляю GetAllUserLoginsAsync, если вдруг тоже используется где-то
+        public async Task<IReadOnlyList<string>> GetAllUserLoginsAsync()
+            => await GetAllUserNamesAsync();
 
         // Редактировать пользователя по логину
         public async Task ClickEditUserAsync(string login)
         {
-            // Находим строку пользователя по логину, затем кликаем кнопку "Редактировать"
             var rowSelector = $"table.user-table tbody tr:has(td:text-is(\"{login}\"))";
             await Page.ClickAsync(rowSelector + " button:has-text(\"Редактировать\")");
         }
@@ -39,8 +44,8 @@ namespace PageObjects
         // Проверить наличие пользователя по логину
         public async Task<bool> IsUserPresentAsync(string login)
         {
-            var logins = await GetAllUserLoginsAsync();
-            return logins.Contains(login);
+            var names = await GetAllUserNamesAsync();
+            return names.Contains(login);
         }
     }
 }
