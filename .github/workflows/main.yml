@@ -27,11 +27,11 @@ jobs:
 
       - name: Run tests and generate Allure results
         env:
-          ALLURE_RESULTS_DIRECTORY: allure-results  # явно задаём путь для артефактов
+          ALLURE_RESULTS_DIRECTORY: allure-results
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
 
       - name: Upload Allure results as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: allure-results
@@ -46,7 +46,7 @@ jobs:
         run: allure generate allure-results -o allure-report
 
       - name: Upload Allure HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report
