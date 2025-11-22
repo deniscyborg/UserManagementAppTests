@@ -1,51 +1,58 @@
+using NUnit.Framework;
 using Microsoft.Playwright;
+using PageObjects;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq; // для метода Contains
 
-namespace PageObjects
+namespace Tests
 {
-    public class UserGridPage : BasePage
+    [TestFixture]
+    public class UserGridCrudTests
     {
-        public UserGridPage(IPage page) : base(page) { }
+        private IPlaywright _playwright;
+        private IBrowser _browser;
+        private TestConfig _config;
 
-        public async Task GoToAsync(string baseUrl)
-            => await Page.GotoAsync(baseUrl + "/users");
-
-        // Для тестов, которым нужен GetAllUserNamesAsync
-        public async Task<IReadOnlyList<string>> GetAllUserNamesAsync()
+        [SetUp]
+        public async Task SetUp()
         {
-            // Берём логины, как уникальные "имена" в твоей таблице
-            var elements = await Page.QuerySelectorAllAsync("table.user-table tbody tr td:nth-child(1)");
-            var names = new List<string>();
-            foreach (var el in elements)
-                names.Add(await el.InnerTextAsync());
-            return names;
+            _config = TestConfig.Load();
+            _playwright = await Playwright.CreateAsync();
+            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
         }
 
-        // Оставляю GetAllUserLoginsAsync, если вдруг тоже используется где-то
-        public async Task<IReadOnlyList<string>> GetAllUserLoginsAsync()
-            => await GetAllUserNamesAsync();
-
-        // Редактировать пользователя по логину
-        public async Task ClickEditUserAsync(string login)
+        [TearDown]
+        public async Task TearDown()
         {
-            var rowSelector = $"table.user-table tbody tr:has(td:text-is(\"{login}\"))";
-            await Page.ClickAsync(rowSelector + " button:has-text(\"Редактировать\")");
+            await _browser.CloseAsync();
+            _playwright.Dispose();
         }
 
-        // Удалить пользователя по логину
-        public async Task DeleteUserAsync(string login)
+        [Test]
+        public async Task AddEditDeleteUser()
         {
-            var rowSelector = $"table.user-table tbody tr:has(td:text-is(\"{login}\"))";
-            await Page.ClickAsync(rowSelector + " button:has-text(\"Удалить\")");
-        }
+            var page = await _browser.NewPageAsync();
+            var usersGrid = new UserGridPage(page);
 
-        // Проверить наличие пользователя по логину
-        public async Task<bool> IsUserPresentAsync(string login)
-        {
-            var names = await GetAllUserNamesAsync();
-            return names.Contains(login);
+            // Переход на страницу грида
+            await usersGrid.GoToAsync(_config.BaseUrl);
+
+            // --- Шаг 1: Добавление пользователя через UI ---
+            // Здесь предполагаем, что пользователь "Алексей" теперь есть
+
+            // --- Шаг 2: Проверка, что пользователь появился ---
+            var allUserNames = await usersGrid.GetAllUserNamesAsync();
+            Assert.That(allUserNames, Does.Contain("Алексей"));
+
+            // --- Шаг 3: Редактирование пользователя ---
+            await usersGrid.ClickEditUserAsync("Алексей");
+            // Тут можно добавить действия для заполнения и сохранения новой информации, если есть в PageObject
+
+            // --- Шаг 4: Удаление пользователя ---
+            await usersGrid.DeleteUserAsync("Алексей");
+
+            // --- Шаг 5: Проверка, что пользователя больше нет ---
+            var allUserNamesAfterDelete = await usersGrid.GetAllUserNamesAsync();
+            Assert.That(allUserNamesAfterDelete, Does.Not.Contain("Алексей"));
         }
     }
 }
