@@ -1,3 +1,4 @@
+using Allure.Net.Commons;
 using NUnit.Framework;
 using Allure.NUnit.Attributes;
 using System.Net.Http;
@@ -29,7 +30,7 @@ namespace Tests
 
         [Test]
         [AllureTag("api", "smoke")]
-        [AllureSeverity(AllureSeverityLevel.critical)]
+        [AllureSeverity(SeverityLevel.critical)]
         public async Task CanAddUserViaApi()
         {
             var user = new { name = "APIТест", surname = "Тестов", email = "apitest@test.ru" };

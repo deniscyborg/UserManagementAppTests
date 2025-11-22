@@ -1,3 +1,4 @@
+using Allure.Net.Commons;
 using NUnit.Framework;
 using Allure.NUnit.Attributes;
 
@@ -8,7 +9,7 @@ namespace Tests
     {
         [Test]
         [AllureTag("smoke")]
-        [AllureSeverity(AllureSeverityLevel.normal)]
+        [AllureSeverity(SeverityLevel.normal)]
         public void MinimalAllureTest()
         {
             Assert.Pass("Success!");
