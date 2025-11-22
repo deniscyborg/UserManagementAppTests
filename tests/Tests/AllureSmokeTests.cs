@@ -13,3 +13,5 @@ namespace Tests
         {
             Assert.Pass("Success!");
         }
+    }
+}
