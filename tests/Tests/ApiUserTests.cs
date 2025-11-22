@@ -3,9 +3,14 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Allure.Attributes;
+using NUnit.Allure.Core;
+using Allure.Commons;
 
 namespace Tests
 {
+    [AllureNUnit]
+    [AllureSuite("User API")]
     public class ApiUserTests
     {
         private HttpClient _client;
@@ -26,6 +31,8 @@ namespace Tests
         }
 
         [Test]
+        [AllureTag("api", "smoke")]
+        [AllureSeverity(SeverityLevel.critical)]
         public async Task CanAddUserViaApi()
         {
             var user = new
