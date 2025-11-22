@@ -3,9 +3,8 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Allure.Attributes;
-using NUnit.Allure.Core;
-using Allure.Commons;
+using Allure.NUnit.Attributes;
+using Allure.NUnit;
 
 namespace Tests
 {
@@ -32,7 +31,7 @@ namespace Tests
 
         [Test]
         [AllureTag("api", "smoke")]
-        [AllureSeverity(SeverityLevel.critical)]
+        [AllureSeverity(SeverityLevel.critical)] // Теперь SeverityLevel из актуального пространства имён
         public async Task CanAddUserViaApi()
         {
             var user = new
@@ -44,7 +43,6 @@ namespace Tests
             var json = JsonSerializer.Serialize(user);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // POST /users
             var response = await _client.PostAsync("/users", content);
 
             Assert.IsTrue(response.IsSuccessStatusCode, "Создание пользователя по API неуспешно: " + response.StatusCode);
