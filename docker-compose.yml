@@ -10,6 +10,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -22,11 +24,18 @@ services:
     depends_on:
       - backend
 
-  # если хочешь MSSQL
   db:
     image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: usermanagementapptests-db-1
     ports:
       - "1533:1433"
     environment:
-      SA_PASSWORD: "Your_password123"
+      SA_PASSWORD: "${DB_SA_PASSWORD}"
       ACCEPT_EULA: "Y"
+    volumes:
+      - dbdata:/var/opt/mssql
+
+volumes:
+  dbdata:
+
+

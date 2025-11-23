@@ -37,3 +37,7 @@ Thumbs.db
 
 allure-results/
 allure-report/
+
+# Others
+
+.env
