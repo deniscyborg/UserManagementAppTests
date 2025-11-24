@@ -7,10 +7,10 @@ on:
     branches: [main]
 
 jobs:
-   build-and-test:
-     runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest
 
-    teps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -19,11 +19,13 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Install Allure.NUnit (актуальная версия)
-        run: dotnet add tests/tests.csproj package Allure.NUnit
-
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
+
+      # Лучше добавить Allure.NUnit в проект один раз локально,
+      # тогда этот шаг не нужен. Оставляю, если хотите делать это в CI.
+      - name: Install Allure.NUnit (latest)
+        run: dotnet add tests/tests.csproj package Allure.NUnit
 
       - name: Build tests
         run: dotnet build tests/tests.csproj --no-restore
@@ -44,12 +46,13 @@ jobs:
 
       - name: Install Allure CLI
         run: |
-          wget https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
-          unzip allure-2.27.0.zip -d /opt/
-          sudo ln -s /opt/allure-2.27.0/bin/allure /usr/bin/allure
+          ALLURE_VERSION=2.27.0
+          wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
+          unzip allure-${ALLURE_VERSION}.zip -d /opt/
+          sudo ln -s /opt/allure-${ALLURE_VERSION}/bin/allure /usr/bin/allure
 
       - name: Generate Allure HTML report
-        run: allure generate allure-results -o allure-report
+        run: allure generate allure-results -o allure-report --clean
 
       - name: Upload Allure HTML report
         uses: actions/upload-artifact@v4
@@ -57,10 +60,11 @@ jobs:
           name: allure-report
           path: allure-report
 
-  deploy:   
-      needs: build-and-test
+  deploy:
+    needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     steps:
       - name: Download Allure report
         uses: actions/download-artifact@v4
@@ -90,4 +94,3 @@ jobs:
           source: "allure-report/*"
           target: "/var/www/report/"
           strip_components: 1
-
