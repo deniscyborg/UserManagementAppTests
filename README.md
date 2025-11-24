@@ -7,13 +7,41 @@
 
 1. Структура проекта автотестов
 
-tests/
-├── PageObjects/         # Page Object-модели для UI-страниц (пример: UserGridPage)
-├── Tests/               # Тестовые классы (UI и API)
-├── appsettings.json     # Конфиг с переменными окружения для тестов
-├── TestConfig.cs        # Загрузка env-переменных и конфиг
-├── README.md            # Описание и инструкции запуска
-├── tests.csproj         # Проект автотестов (C#)
+UserManagementAppTests/
+│
+├─ .github/
+│   └─ workflows/
+│        └─ deploy.yml      # Github Actions workflow для CI/CD
+│
+├─ backend/                 # .NET WebAPI, исходники приложения
+│
+├─ frontend/                # React/JS/Vite frontend
+│
+├─ docker-compose.yml       # docker-compose для всего приложения (dev/staging/prod)
+│
+├─ README.md                # описание тестового и боевого окружения
+│
+├─ tests/                   # Сборник автотестов
+│   ├─ PageObjects/         # PageObject-классы, шаблоны работы с UI через Playwright
+│   │    ├─ BasePage.cs
+│   │    ├─ UserGridPage.cs
+│   │    └─ UserFormPage.cs
+│   │
+│   ├─ Tests/               # Сами тестовые сценарии (NUnit/Playwright)
+│   │    ├─ ApiUserTests.cs
+│   │    ├─ UserGridTests.cs
+│   │    ├─ UserFormTests.cs
+│   │    ├─ PlaywrightSmoke.cs
+│   │    └─ AllureSmokeTests.cs
+│   │
+│   ├─ TestConfig.cs        # Класс для параметризации тестовых переменных (BASE_URL, BROWSER и др.)
+│   ├─ Tests.csproj         # Проектный файл автотестов (C#/.NET)
+│   └─ README.md            # док по тестированию, переменным и запуску
+│
+├─ .gitignore               # исключаем из гита ненужные файлы (bin, obj, отчёты)
+└─ ...
+
+
 
 PageObjects/ — содержит классы, реализующие работу с конкретными страницами.
 Tests/ — классы автотестов: API и UI.
