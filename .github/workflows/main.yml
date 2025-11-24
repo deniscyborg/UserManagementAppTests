@@ -57,12 +57,18 @@ jobs:
           name: allure-report
           path: allure-report
 
-  deploy:
+    deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: Deploy to production server via SSH
+      - name: Download Allure report
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Deploy app to server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -74,3 +80,14 @@ jobs:
             docker-compose down
             docker-compose build
             docker-compose up -d
+
+      - name: Copy Allure report to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "allure-report/*"
+          target: "/var/www/report/"
+          strip_components: 1
+
