@@ -56,3 +56,21 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy to production server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /root/UserManagementAppTests
+            git pull origin main
+            docker-compose down
+            docker-compose build
+            docker-compose up -d
