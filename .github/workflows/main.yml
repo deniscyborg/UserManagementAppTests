@@ -7,10 +7,10 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+   build-and-test:
+     runs-on: ubuntu-latest
 
-    steps:
+    teps:
       - name: Checkout code
         uses: actions/checkout@v3
 
