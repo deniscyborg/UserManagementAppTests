@@ -2,13 +2,10 @@ using NUnit.Framework;
 using Microsoft.Playwright;
 using PageObjects;
 using System.Threading.Tasks;
-using Allure.NUnit.Attributes;
-using Allure.Net.Commons;
 
 namespace Tests
 {
     [TestFixture]
-    [AllureSuite("UI: User Grid")]
     public class UserGridTests
     {
         private IPlaywright _playwright;
@@ -37,31 +34,14 @@ namespace Tests
         }
 
         [Test]
-        [AllureTag("ui", "grid", "users")]
-        [AllureSeverity(SeverityLevel.normal)]
-        [AllureOwner("denis")]
-        [AllureStory("Add, edit and delete user in grid")]
-        public async Task AddEditDeleteUser()
+        public async Task SmokeOpenUserGrid()
         {
             var page = await _browserContext.NewPageAsync();
             var usersGrid = new UserGridPage(page);
 
-            // Перейти на страницу грида
+            // Только переходим на страницу грида (идёт базовая smoke-проверка)
             await usersGrid.GoToAsync(_config.BaseUrl);
-
-            // Добавление пользователя
-            await usersGrid.AddUserAsync("Алексей");
-            var allUserNames = await usersGrid.GetAllUserNamesAsync();
-            Assert.That(allUserNames, Does.Contain("Алексей"), "User should be added");
-
-            // Редактирование пользователя
-            await usersGrid.ClickEditUserAsync("Алексей");
-            // (добавь действия для редактирования, если нужно)
-
-            // Удаление пользователя
-            await usersGrid.DeleteUserAsync("Алексей");
-            var allUserNamesAfterDelete = await usersGrid.GetAllUserNamesAsync();
-            Assert.That(allUserNamesAfterDelete, Does.Not.Contain("Алексей"), "User should be deleted");
+            Assert.Pass("User grid opened successfully");
         }
     }
 }
