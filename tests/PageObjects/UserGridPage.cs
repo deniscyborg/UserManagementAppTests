@@ -1,68 +1,23 @@
-using NUnit.Framework;
 using Microsoft.Playwright;
-using PageObjects;
 using System.Threading.Tasks;
-using Allure.NUnit.Attributes;
-using Allure.Net.Commons;
 
-namespace Tests
+namespace PageObjects
 {
-    [TestFixture]
-    [AllureSuite("UI: User Grid")] // Группа тестов для Allure-отчёта
-    public class UserGridTests
+    public class UserGridPage : BasePage
     {
-        private IPlaywright _playwright;
-        private IBrowser _browser;
-        private IBrowserContext _browserContext;
-        private TestConfig _config;
+        public UserGridPage(IPage page) : base(page) { }
 
-        [SetUp]
-        public async Task SetUp()
+        public async Task GoToAsync(string baseUrl)
+            => await Page.GotoAsync(baseUrl + "/users");
+
+        public async Task AddUserAsync(string name)
+            => await Page.FillAsync("input[name='name']", name); // либо перейти на форму, либо кликнуть "Add"
+
+        public async Task DeleteUserAsync(string name)
         {
-            _config = TestConfig.Load();
-
-            _playwright = await Playwright.CreateAsync();
-            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            _browserContext = await _browser.NewContextAsync();
+           // выбери строку по имени пользователя и кликни по кнопке "Delete"
+           await Page.ClickAsync($"//tr[td[text()='{name}']]//button[contains(@class,'delete')]");
         }
-
-        [TearDown]
-        public async Task TearDown()
-        {
-            if (_browserContext != null)
-                await _browserContext.CloseAsync();
-            if (_browser != null)
-                await _browser.CloseAsync();
-            if (_playwright != null)
-                _playwright.Dispose();
-        }
-
-        [Test]
-        [AllureTag("ui", "grid", "users")]
-        [AllureSeverity(SeverityLevel.normal)]
-        [AllureOwner("denis")]
-        [AllureStory("Add, edit and delete user in grid")]
-        public async Task AddEditDeleteUser()
-        {
-            var page = await _browserContext.NewPageAsync();
-            var usersGrid = new UserGridPage(page);
-
-            // 1. Перейти на страницу грида
-            await usersGrid.GoToAsync(_config.BaseUrl);
-
-            // 2. Добавить пользователя
-            await usersGrid.AddUserAsync("Алексей");
-            var allUserNames = await usersGrid.GetAllUserNamesAsync();
-            Assert.That(allUserNames, Does.Contain("Алексей"), "User should be added");
-
-            // 3. Редактировать пользователя (реализуй подробности внутри PageObject)
-            await usersGrid.ClickEditUserAsync("Алексей");
-            // Здесь добавь действия по редактированию, если надо
-
-            // 4. Удалить пользователя
-            await usersGrid.DeleteUserAsync("Алексей");
-            var allUserNamesAfterDelete = await usersGrid.GetAllUserNamesAsync();
-            Assert.That(allUserNamesAfterDelete, Does.Not.Contain("Алексей"), "User should be deleted");
-        }
+        // ... и остальные методы: GetAllUserNamesAsync, ClickEditUserAsync и т.п.
     }
 }
