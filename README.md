@@ -1,95 +1,79 @@
+
 # UserManagementApp Автотесты
 
 ![Build Status](https://github.com/deniscyborg/UserManagementAppTests/actions/workflows/dotnet-allure.yml/badge.svg)
 
-Приложение доступно по адресу http://usermanagementapp.com/
-Отчет Allue доступен по адресу http://report.usermanagementapp.com/
+**Приложение**: [http://usermanagementapp.com/](http://usermanagementapp.com/)  
+**Отчет Allure**: [http://report.usermanagementapp.com/](http://report.usermanagementapp.com/)
 
-1. Структура проекта автотестов
+## 1. Структура проекта
 
-UserManagementAppTests/
-│
-├─ .github/
-│   └─ workflows/
-│        └─ deploy.yml      # Github Actions workflow для CI/CD
-│
-├─ backend/                 # .NET WebAPI, исходники приложения
-│
-├─ frontend/                # React/JS/Vite frontend
-│
-├─ docker-compose.yml       # docker-compose для всего приложения (dev/staging/prod)
-│
-├─ README.md                # описание тестового и боевого окружения
-│
-├─ tests/                   # Сборник автотестов
-│   ├─ PageObjects/         # PageObject-классы, шаблоны работы с UI через Playwright
-│   │    ├─ BasePage.cs
-│   │    ├─ UserGridPage.cs
-│   │    └─ UserFormPage.cs
-│   │
-│   ├─ Tests/               # Сами тестовые сценарии (NUnit/Playwright)
-│   │    ├─ ApiUserTests.cs
-│   │    ├─ UserGridTests.cs
-│   │    ├─ UserFormTests.cs
-│   │    ├─ PlaywrightSmoke.cs
-│   │    └─ AllureSmokeTests.cs
-│   │
-│   ├─ TestConfig.cs        # Класс для параметризации тестовых переменных (BASE_URL, BROWSER и др.)
-│   ├─ Tests.csproj         # Проектный файл автотестов (C#/.NET)
-│   └─ README.md            # док по тестированию, переменным и запуску
-│
-├─ .gitignore               # исключаем из гита ненужные файлы (bin, obj, отчёты)
-└─ ...
+<img width="723" height="629" alt="image" src="https://github.com/user-attachments/assets/89e0feb9-d53a-4e1c-82b9-a18a1889a61b" />
 
 
+**PageObjects/** — классы для управления UI (Playwright)  
+**Tests/** — классы тестов (UI и API)  
+**appsettings.json** — хранит BASE_URL, BROWSER, REMOTE  
+**TestConfig.cs** — загрузка переменных окружения  
+**README.md** — краткая документация  
+**Tests.csproj** — проект автотестов
+---
+## 2. Page Object — минимальный пример
 
-PageObjects/ — содержит классы, реализующие работу с конкретными страницами.
-Tests/ — классы автотестов: API и UI.
-appsettings.json — хранит значения BASE_URL, BROWSER, REMOTE.
-TestConfig.cs — загрузка переменных окружения/config.
-README.md — краткая документация.
-tests.csproj — C# проект автотестов.
-
-2. Page Object — минимальный пример
-
-// PageObjects/UserGridPage.cs
+// tests/PageObjects/UserGridPage.cs
 using Microsoft.Playwright;
 
 public class UserGridPage
 {
-    private readonly IPage Page;
+private readonly IPage Page;
 
-    public UserGridPage(IPage page) => Page = page;
-    public async Task OpenAsync() => await Page.GotoAsync("users");
-    public async Task<string[]> GetUserNamesAsync()
-    {
-        // Селектор фиксируй по реальному HTML!
-        return await Page.Locator(".user-row .user-name").AllInnerTextsAsync();
-    }
+public UserGridPage(IPage page) => Page = page;
+public async Task OpenAsync() => await Page.GotoAsync("users");
+public async Task<string[]> GetUserNamesAsync()
+{
+    // Используй актуальный селектор для таблицы
+    return await Page.Locator(".user-row .user-name").AllInnerTextsAsync();
+}
 }
 
-3. Инструкции запуска
-Установить зависимости:
 
-.NET 8 SDK
-Playwright (Автоматически ставится при первом запуске тестов: playwright install)
-Требуемые переменные окружения:
-BASE_URL — адрес Frontend-сервера, например: http://localhost:5173
-BROWSER — браузер для запуска тестов (chromium / firefox / webkit)
-REMOTE — (опционально) URL Selenium Grid/удалённого раннера
-Можно задать значения через appsettings.json или переменные окружения.
-Запуск тестов:
+---
+
+## 3. Инструкции запуска
+
+- **Зависимости:**
+  - .NET 8 SDK
+  - Playwright (`playwright install` автоматически)
+
+- **Переменные окружения:**
+  - `BASE_URL` — адрес фронта (например, http://localhost:5173)
+  - `BROWSER` — browser: chromium / firefox / webkit
+  - `REMOTE` — адрес Selenium Grid (опционально)
+
+  _Рекомендуется задавать через `appsettings.json` или ENV._
+
+- **Запуск тестов:**
 dotnet test
-Для отдельных тестов:
+Для отдельного теста:
 dotnet test --filter "FullyQualifiedName~Tests.ApiUserTests"
 
-4. Краткий план автоматизации
-В первую очередь покрываются:
-API-тесты: создание, чтение, изменение и удаление пользователя (CRUD).
-UI-тесты: добавление пользователя через форму, проверка отображения в таблице.
 
-5. Базовые метрики:
-Процент прохождения тестов
-Кол-во ошибок по категориям (функционал/валидация/UI/интеграция)
-Allure Report или аналогичный отчет (можно интегрировать с CI/CD)
-Автоматизация позволит оперативно выявлять ошибки, проверять работу пользовательской формы и API, отслеживать стабильность приложения на различных конфигурациях.
+---
+
+## 4. Краткий план автоматизации
+
+- API-тесты: создание, чтение, изменение, удаление пользователя (CRUD)
+- UI-тесты: добавление пользователя через форму, проверка отображения в таблице
+
+---
+
+## 5. Базовые метрики
+
+- Процент прохождения тестов
+- Количество ошибок по категориям (функционал, валидация, UI, интеграция)
+- Отчёты Allure (интеграция с CI/CD)
+
+_Автоматизация позволяет быстро выявлять ошибки, отслеживать работу форм и API, контролировать стабильность на всех конфигурациях._
+
+---
+
