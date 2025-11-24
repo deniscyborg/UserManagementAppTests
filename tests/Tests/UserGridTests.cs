@@ -2,17 +2,18 @@ using NUnit.Framework;
 using Microsoft.Playwright;
 using PageObjects;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Allure.NUnit.Attributes;           // <--- Добавлено
-using Allure.Net.Commons;                // <--- Добавлено
+using Allure.NUnit.Attributes;
+using Allure.Net.Commons;
 
 namespace Tests
 {
-    [AllureSuite("UI: User Grid")]       // <--- Название группы тестов для отчёта
+    [TestFixture]
+    [AllureSuite("UI: User Grid")]
     public class UserGridTests
     {
         private IPlaywright _playwright;
         private IBrowser _browser;
+        private IBrowserContext _browserContext;
         private TestConfig _config;
 
         [SetUp]
@@ -21,29 +22,46 @@ namespace Tests
             _config = TestConfig.Load();
             _playwright = await Playwright.CreateAsync();
             _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            _browserContext = await _browser.NewContextAsync();
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            await _browser.CloseAsync();
-            _playwright.Dispose();
+            if (_browserContext != null)
+                await _browserContext.CloseAsync();
+            if (_browser != null)
+                await _browser.CloseAsync();
+            if (_playwright != null)
+                _playwright.Dispose();
         }
 
         [Test]
-        [AllureTag("ui", "grid", "users")]                  // <--- Теги для Allure
-        [AllureSeverity(SeverityLevel.normal)]              // <--- Важность теста
-        [AllureOwner("denis")]                              // <--- Автор теста (по желанию)
-        [AllureStory("View user names in grid")]            // <--- Описание сценария
-        public async Task CanSeeUsersInGrid()
+        [AllureTag("ui", "grid", "users")]
+        [AllureSeverity(SeverityLevel.normal)]
+        [AllureOwner("denis")]
+        [AllureStory("Add, edit and delete user in grid")]
+        public async Task AddEditDeleteUser()
         {
-            var page = await _browser.NewPageAsync();
-            var userGridPage = new UserGridPage(page);
+            var page = await _browserContext.NewPageAsync();
+            var usersGrid = new UserGridPage(page);
 
-            await userGridPage.GoToAsync(_config.BaseUrl);
+            // Перейти на страницу грида
+            await usersGrid.GoToAsync(_config.BaseUrl);
 
-            var users = await userGridPage.GetAllUserNamesAsync();
-            Assert.Contains("Алексей", users);
+            // Добавление пользователя
+            await usersGrid.AddUserAsync("Алексей");
+            var allUserNames = await usersGrid.GetAllUserNamesAsync();
+            Assert.That(allUserNames, Does.Contain("Алексей"), "User should be added");
+
+            // Редактирование пользователя
+            await usersGrid.ClickEditUserAsync("Алексей");
+            // (добавь действия для редактирования, если нужно)
+
+            // Удаление пользователя
+            await usersGrid.DeleteUserAsync("Алексей");
+            var allUserNamesAfterDelete = await usersGrid.GetAllUserNamesAsync();
+            Assert.That(allUserNamesAfterDelete, Does.Not.Contain("Алексей"), "User should be deleted");
         }
     }
 }
