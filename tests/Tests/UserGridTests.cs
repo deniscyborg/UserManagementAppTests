@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using Allure.NUnit.Attributes;
+using Allure.Net.Commons; 
 using Microsoft.Playwright;
 using PageObjects;
 using System.Threading.Tasks;

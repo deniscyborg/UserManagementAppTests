@@ -1,8 +1,8 @@
 using Microsoft.Playwright;
 using NUnit.Framework;
 using System.Threading.Tasks;
-using Allure.NUnit.Attributes;           // <--- Добавлено
-using Allure.Net.Commons;                // <--- Добавлено
+using Allure.NUnit.Attributes;
+using Allure.Net.Commons;
 
 namespace Tests
 {

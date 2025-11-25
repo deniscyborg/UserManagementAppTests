@@ -1,6 +1,6 @@
+using Allure.NUnit.Attributes;
 using Allure.Net.Commons;
 using NUnit.Framework;
-using Allure.NUnit.Attributes;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text;
