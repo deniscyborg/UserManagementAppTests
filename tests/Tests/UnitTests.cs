@@ -1,3 +1,6 @@
+using NUnit.Framework;
+using Allure.NUnit.Attributes;
+
 [TestFixture]
 [AllureSuite("Unit Tests")]
 public class UnitTests
