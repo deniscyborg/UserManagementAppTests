@@ -28,18 +28,16 @@ jobs:
       - name: Build tests
         run: dotnet build tests/tests.csproj --no-restore
 
-      # ← Переместили ПОСЛЕ build
       - name: Install Playwright browsers
         run: pwsh tests/bin/Debug/net6.0/playwright.ps1 install --with-deps
 
       - name: Run tests and generate Allure results
         env:
-          BASE_URL: "https://usermanagementapp.com"  # ← Исправьте на реальный URL
+          BASE_URL: "https://usermanagementapp.com"
           API_BASE_URL: "https://usermanagementapp.com/api"
           BROWSER: "chromium"
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
 
-      # ← Добавили if: always() и правильный path
       - name: Upload Allure results as artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -54,7 +52,6 @@ jobs:
           unzip allure-${ALLURE_VERSION}.zip -d /opt/
           sudo ln -s /opt/allure-${ALLURE_VERSION}/bin/allure /usr/bin/allure
 
-      # ← Исправили путь
       - name: Generate Allure HTML report
         run: allure generate tests/bin/Debug/net6.0/allure-results -o allure-report --clean
 
@@ -98,3 +95,13 @@ jobs:
           source: "allure-report/*"
           target: "/var/www/report/"
           strip_components: 1
+
+      - name: Verify report deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            ls -la /var/www/report/
+            curl -I http://report.usermanagementapp.com/
