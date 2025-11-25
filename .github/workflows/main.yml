@@ -90,4 +90,15 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           source: "allure-report/*"
-          target
+          target: "/var/www/report/"
+          strip_components: 1
+
+      - name: Verify report deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            ls -la /var/www/report/
+            curl -I http://report.usermanagementapp.com/
