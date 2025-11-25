@@ -14,25 +14,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: Setup .NET SDK for tests
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '6.0.x'
+
+      - name: Setup .NET SDK for backend
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Start application
+      - name: Start backend
+        run: |
+          cd backend
+          dotnet restore
+          dotnet build --no-restore
+          nohup dotnet run --no-build --urls "http://localhost:5000" > backend.log 2>&1 &
+          sleep 10
+          echo "Backend started on port 5000"
+
+      - name: Start frontend
         run: |
           cd frontend
           npm install
-          npm run dev &
+          nohup npm run dev > frontend.log 2>&1 &
           sleep 15
-          echo "Application started"
+          echo "Frontend started on port 5173"
 
-      - name: Restore dependencies
+      - name: Verify services are running
+        run: |
+          curl -f http://localhost:5173 || echo "Frontend not ready"
+          echo "Services verification complete"
+
+      - name: Restore test dependencies
         run: dotnet restore tests/tests.csproj
 
       - name: Build tests
@@ -47,10 +66,18 @@ jobs:
       - name: Run tests and generate Allure results
         env:
           BASE_URL: "http://localhost:5173"
-          API_BASE_URL: "http://localhost:5173/api"
+          API_BASE_URL: "http://localhost:5000/api"
           BROWSER: "chromium"
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
         continue-on-error: true
+
+      - name: Show backend logs
+        if: always()
+        run: cat backend/backend.log || echo "No backend logs"
+
+      - name: Show frontend logs
+        if: always()
+        run: cat frontend/frontend.log || echo "No frontend logs"
 
       - name: Upload Allure results as artifact
         uses: actions/upload-artifact@v4
@@ -69,56 +96,4 @@ jobs:
 
       - name: Generate Allure HTML report
         if: always()
-        run: allure generate tests/bin/Debug/net6.0/allure-results -o allure-report --clean
-
-      - name: Upload Allure HTML report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: allure-report
-          path: allure-report
-
-  deploy:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && always()
-
-    steps:
-      - name: Download Allure report
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report
-
-      - name: Deploy app to server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd /root/UserManagementAppTests
-            git pull origin main
-            docker-compose down
-            docker-compose build
-            docker-compose up -d
-
-      - name: Copy Allure report to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "allure-report/*"
-          target: "/var/www/report/"
-          strip_components: 1
-
-      - name: Verify report deployment
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            ls -la /var/www/report/
-            curl -I http://report.usermanagementapp.com/
+        run: allure generate tests/bin/Debug/net6.0/
