@@ -35,7 +35,7 @@ jobs:
           dotnet clean
           dotnet restore --force
           dotnet build --no-restore
-          nohup dotnet run --no-build --urls "http://localhost:5000" > backend.log 2>&1 &
+          nohup dotnet run --no-build --urls "http://localhost:5000" > ../backend.log 2>&1 &
           sleep 10
           echo "Backend started on port 5000"
 
@@ -43,15 +43,20 @@ jobs:
         run: |
           cd frontend
           npm install
-          nohup npm run dev > frontend.log 2>&1 &
+          nohup npm run dev > ../frontend.log 2>&1 &
           sleep 15
           echo "Frontend started on port 5173"
 
       - name: Verify services are running
         run: |
-          curl -f http://localhost:5173 || echo "Frontend not ready"
-          curl -f http://localhost:5000 || echo "Backend not ready"
-          echo "Services verification complete"
+          echo "Checking backend..."
+          curl -v http://localhost:5000 || echo "Backend NOT responding"
+          
+          echo "Checking frontend..."
+          curl -v http://localhost:5173 || echo "Frontend NOT responding"
+          
+          echo "Listing running processes..."
+          ps aux | grep -E "dotnet|node" || echo "No processes found"
 
       - name: Restore test dependencies
         run: dotnet restore tests/tests.csproj
@@ -75,11 +80,11 @@ jobs:
 
       - name: Show backend logs
         if: always()
-        run: cat backend/backend.log || echo "No backend logs"
+        run: cat backend.log || echo "No backend logs"
 
       - name: Show frontend logs
         if: always()
-        run: cat frontend/frontend.log || echo "No frontend logs"
+        run: cat frontend.log || echo "No frontend logs"
 
       - name: Upload Allure results as artifact
         uses: actions/upload-artifact@v4
