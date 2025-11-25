@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Allure.NUnit.Attributes;  // <-- Для [AllureSuite], [AllureTag] и т.д.
 using Allure.Net.Commons;       // <-- Для SeverityLevel и других типов
