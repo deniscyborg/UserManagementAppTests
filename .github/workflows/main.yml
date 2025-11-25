@@ -22,27 +22,30 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
-      # Лучше добавить Allure.NUnit в проект один раз локально,
-      # тогда этот шаг не нужен. Оставляю, если хотите делать это в CI.
       - name: Install Allure.NUnit (latest)
         run: dotnet add tests/tests.csproj package Allure.NUnit
 
       - name: Build tests
         run: dotnet build tests/tests.csproj --no-restore
 
+      # ← Переместили ПОСЛЕ build
+      - name: Install Playwright browsers
+        run: pwsh tests/bin/Debug/net6.0/playwright.ps1 install --with-deps
+
       - name: Run tests and generate Allure results
         env:
-          BASE_URL: "http://deploy-host:5173"
-          API_BASE_URL: "http://deploy-host:5006/api"
+          BASE_URL: "https://usermanagementapp.com"  # ← Исправьте на реальный URL
+          API_BASE_URL: "https://usermanagementapp.com/api"
           BROWSER: "chromium"
-          ALLURE_RESULTS_DIRECTORY: allure-results
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
 
+      # ← Добавили if: always() и правильный path
       - name: Upload Allure results as artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: allure-results
-          path: allure-results
+          path: tests/bin/Debug/net6.0/allure-results
 
       - name: Install Allure CLI
         run: |
@@ -51,8 +54,9 @@ jobs:
           unzip allure-${ALLURE_VERSION}.zip -d /opt/
           sudo ln -s /opt/allure-${ALLURE_VERSION}/bin/allure /usr/bin/allure
 
+      # ← Исправили путь
       - name: Generate Allure HTML report
-        run: allure generate allure-results -o allure-report --clean
+        run: allure generate tests/bin/Debug/net6.0/allure-results -o allure-report --clean
 
       - name: Upload Allure HTML report
         uses: actions/upload-artifact@v4
