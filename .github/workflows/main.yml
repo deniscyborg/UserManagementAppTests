@@ -22,9 +22,6 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore tests/tests.csproj
 
-      - name: Install Allure.NUnit (latest)
-        run: dotnet add tests/tests.csproj package Allure.NUnit
-
       - name: Build tests
         run: dotnet build tests/tests.csproj --no-restore
 
@@ -64,44 +61,4 @@ jobs:
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Download Allure report
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report
-
-      - name: Deploy app to server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd /root/UserManagementAppTests
-            git pull origin main
-            docker-compose down
-            docker-compose build
-            docker-compose up -d
-
-      - name: Copy Allure report to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "allure-report/*"
-          target: "/var/www/report/"
-          strip_components: 1
-
-      - name: Verify report deployment
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            ls -la /var/www/report/
-            curl -I http://report.usermanagementapp.com/
+    if: github.ref == 'refs/heads/main' && github.event_name ==
