@@ -7,7 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Tests
-{
+{   
+    [TestFixture]
     [AllureSuite("User API")]
     public class ApiUserTests
     {

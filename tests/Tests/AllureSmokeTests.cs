@@ -3,7 +3,8 @@ using NUnit.Framework;
 using Allure.NUnit.Attributes;
 
 namespace Tests
-{
+{   
+    [TestFixture]
     [AllureSuite("Allure Smoke")]
     public class AllureSmokeTests
     {

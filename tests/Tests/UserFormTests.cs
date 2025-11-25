@@ -6,7 +6,8 @@ using Allure.NUnit.Attributes;
 using Allure.Net.Commons;
 
 namespace Tests
-{
+{   
+    [TestFixture]
     [AllureSuite("UI: User Form")]
     public class UserFormTests
     {

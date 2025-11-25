@@ -4,6 +4,7 @@ using Allure.Net.Commons;            // <--- Добавлено
 
 namespace Tests
 {
+    [TestFixture]
     [AllureSuite("Smoke")]           // <--- Имя группы тестов для отчёта
     public class SmokeTest
     {

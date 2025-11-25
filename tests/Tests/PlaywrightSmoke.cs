@@ -6,6 +6,7 @@ using Allure.Net.Commons;                // <--- Добавлено
 
 namespace Tests
 {
+    [TestFixture]
     [AllureSuite("Playwright Smoke")]                   // <--- Группа тестов для отчёта
     public class PlaywrightSmoke
     {
