@@ -32,7 +32,8 @@ jobs:
       - name: Start backend
         run: |
           cd backend
-          dotnet restore
+          dotnet clean
+          dotnet restore --force
           dotnet build --no-restore
           nohup dotnet run --no-build --urls "http://localhost:5000" > backend.log 2>&1 &
           sleep 10
@@ -49,6 +50,7 @@ jobs:
       - name: Verify services are running
         run: |
           curl -f http://localhost:5173 || echo "Frontend not ready"
+          curl -f http://localhost:5000 || echo "Backend not ready"
           echo "Services verification complete"
 
       - name: Restore test dependencies
@@ -96,4 +98,56 @@ jobs:
 
       - name: Generate Allure HTML report
         if: always()
-        run: allure generate tests/bin/Debug/net6.0/
+        run: allure generate tests/bin/Debug/net6.0/allure-results -o allure-report --clean
+
+      - name: Upload Allure HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report
+          path: allure-report
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && always()
+
+    steps:
+      - name: Download Allure report
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Deploy app to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /root/UserManagementAppTests
+            git pull origin main
+            docker-compose down
+            docker-compose build
+            docker-compose up -d
+
+      - name: Copy Allure report to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "allure-report/*"
+          target: "/var/www/report/"
+          strip_components: 1
+
+      - name: Verify report deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            ls -la /var/www/report/
+            curl -I http://report.usermanagementapp.com/
