@@ -1,59 +1,60 @@
-using UserManagementApp.Models;
-using System.Text.RegularExpressions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using backend.Models;
 
-[ApiController]
-[Route("api/[controller]")]
-public class UsersController : ControllerBase
+namespace backend.Controllers
 {
-    private static List<User> users = new List<User>();
-
-    [HttpGet]
-    public IEnumerable<User> Get() => users;
-
-    [HttpPost]
-public IActionResult Add(AddUserDto userDto)
-{
-    if (string.IsNullOrWhiteSpace(userDto.Name) || userDto.Name.Length < 3)
-        return BadRequest("Имя слишком короткое");
-    if (string.IsNullOrWhiteSpace(userDto.Surname) || userDto.Surname.Length < 3)
-        return BadRequest("Фамилия слишком короткая");
-    if (string.IsNullOrWhiteSpace(userDto.Email) || !Regex.IsMatch(userDto.Email, @"^[^@\s]+@[^@\s]+\.(ru)$"))
-        return BadRequest("Email должен содержать @ и заканчиваться на .ru");
-
-    var user = new User
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UsersController : ControllerBase
     {
-        Login = Guid.NewGuid().ToString("N"),
-        Name = userDto.Name,
-        Surname = userDto.Surname,
-        Email = userDto.Email,
-        LastVisited = DateTime.Now
-    };
-    users.Add(user);
-    return Ok(user);
-}
+        private static List<User> users = new();
+        private static int nextId = 1;
 
-    [HttpPut("{login}")]
-    public IActionResult Edit(string login, User update)
-    {
-        var user = users.SingleOrDefault(u => u.Login == login);
-        if (user == null) return NotFound();
-        user.Name = update.Name;
-        user.Surname = update.Surname;
-        user.Email = update.Email;
-        user.LastVisited = DateTime.Now;
-        return Ok(user);
-    }
+        [HttpGet]
+        public ActionResult<List<User>> GetAll()
+        {
+            return Ok(users);
+        }
 
-    [HttpDelete("{login}")]
-    public IActionResult Delete(string login)
-    {
-        var user = users.SingleOrDefault(u => u.Login == login);
-        if (user == null) return NotFound();
-        users.Remove(user);
-        return Ok();
+        [HttpPost]
+        public ActionResult<User> Create([FromBody] AddUserDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Name) || 
+                string.IsNullOrWhiteSpace(dto.Surname) || 
+                string.IsNullOrWhiteSpace(dto.Email))
+            {
+                return BadRequest(new { error = "All fields are required" });
+            }
+
+            var user = new User
+            {
+                Id = nextId++,
+                Login = dto.Email.Split('@')[0],
+                Name = dto.Name,
+                Surname = dto.Surname,
+                Email = dto.Email
+            };
+
+            users.Add(user);
+            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        }
+
+        [HttpGet("{id}")]
+        public ActionResult<User> GetById(int id)
+        {
+            var user = users.FirstOrDefault(u => u.Id == id);
+            return user != null ? Ok(user) : NotFound();
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult Delete(int id)
+        {
+            var user = users.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+                return NotFound();
+
+            users.Remove(user);
+            return NoContent();
+        }
     }
 }

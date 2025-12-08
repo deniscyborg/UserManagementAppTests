@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using backend.Models;  // Добавить эту строку!
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,17 +12,17 @@ app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyOrigin());
 
-// In-memory хранилище пользователей (для тестов)
+// In-memory хранилище
 var users = new List<User>();
 int nextId = 1;
 
-// GET /api/users - получить всех пользователей
+// GET /api/users
 app.MapGet("/api/users", () => 
 {
     return Results.Ok(users);
 });
 
-// POST /api/users - создать нового пользователя
+// POST /api/users
 app.MapPost("/api/users", async ([FromBody] AddUserDto dto) => 
 {
     if (string.IsNullOrWhiteSpace(dto.Name) || 
@@ -34,7 +35,7 @@ app.MapPost("/api/users", async ([FromBody] AddUserDto dto) =>
     var user = new User
     {
         Id = nextId++,
-        Login = dto.Email.Split('@')[0], // используем часть email как логин
+        Login = dto.Email.Split('@')[0],
         Name = dto.Name,
         Surname = dto.Surname,
         Email = dto.Email
@@ -44,14 +45,14 @@ app.MapPost("/api/users", async ([FromBody] AddUserDto dto) =>
     return Results.Created($"/api/users/{user.Id}", user);
 });
 
-// GET /api/users/{id} - получить пользователя по ID
+// GET /api/users/{id}
 app.MapGet("/api/users/{id}", (int id) => 
 {
     var user = users.FirstOrDefault(u => u.Id == id);
     return user != null ? Results.Ok(user) : Results.NotFound();
 });
 
-// DELETE /api/users/{id} - удалить пользователя
+// DELETE /api/users/{id}
 app.MapDelete("/api/users/{id}", (int id) => 
 {
     var user = users.FirstOrDefault(u => u.Id == id);
@@ -65,20 +66,3 @@ app.MapDelete("/api/users/{id}", (int id) =>
 app.MapControllers();
 
 app.Run();
-
-// Модели данных
-public record AddUserDto
-{
-    public string Name { get; init; } = string.Empty;
-    public string Surname { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
-}
-
-public class User
-{
-    public int Id { get; set; }
-    public string Login { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Surname { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-}

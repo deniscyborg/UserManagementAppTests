@@ -1,8 +1,11 @@
-public class User
+namespace backend.Models
 {
-    public string Login { get; set; } // Без [Required]
-    public string Name { get; set; }
-    public string Surname { get; set; }
-    public string Email { get; set; }
-    public DateTime? LastVisited { get; set; }
+    public class User
+    {
+        public int Id { get; set; }
+        public string Login { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Surname { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
 }
