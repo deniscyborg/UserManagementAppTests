@@ -80,9 +80,15 @@ namespace Tests
             {
                 AllureApi.Step($"Navigate to {_config.BaseUrl}");
                 await userFormPage.GoToAsync(_config.BaseUrl);
+
+                            AllureApi.Step("Click 'Добавить пользователя' button");
+            await userFormPage.ClickAddUserButtonAsync();
                 
                 AllureApi.Step("Fill user name: Алексей");
                 await userFormPage.FillNameAsync("Алексей");
+
+                            AllureApi.Step("Fill user surname: Иванов");
+            await userFormPage.FillSurnameAsync("Иванов");
                 
                 AllureApi.Step("Fill user email: alexey@test.ru");
                 await userFormPage.FillEmailAsync("alexey@test.ru");
