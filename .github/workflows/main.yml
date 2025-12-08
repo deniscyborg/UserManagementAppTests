@@ -43,14 +43,4 @@ jobs:
         run: |
           cd frontend
           npm install
-          nohup npm run dev > ../frontend.log 2>&1 &
-          sleep 25
-          echo "Frontend started on port 5173"
-
-      - name: Verify services are running
-        run: |
-          echo "Waiting for services..."
-          for i in {1..30}; do
-            if curl -s http://localhost:5000/api/users > /dev/null && \
-               curl -s http://localhost:5173 > /dev/null; then
-              echo "Both
+          nohup npm run dev > ../frontend.log 2>&
