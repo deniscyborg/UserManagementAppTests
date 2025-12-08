@@ -8,7 +8,20 @@ namespace PageObjects
         public UserFormPage(IPage page) : base(page) { }
 
         public async Task GoToAsync(string baseUrl)
-            => await Page.GotoAsync(baseUrl + "/users/add");
+            => await Page.GotoAsync(baseUrl);
+
+                    public async Task ClickAddUserButtonAsync()
+        {
+            var addButton = Page.Locator("button:has-text('Добавить пользователя')");
+            await addButton.WaitForAsync(
+                new LocatorWaitForOptions
+                {
+                    State = WaitForSelectorState.Visible,
+                    Timeout = 5000
+                }
+            );
+            await addButton.ClickAsync();
+        }
 
         public async Task FillNameAsync(string name)
         {
