@@ -140,6 +140,7 @@ jobs:
             docker-compose down
             docker-compose build
             docker-compose up -d
+            rm -rf /var/www/report/*
 
       - name: Copy Allure report to server
         uses: appleboy/scp-action@v0.1.7
