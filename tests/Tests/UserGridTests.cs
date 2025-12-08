@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace Tests
 {
     [TestFixture]
+    [AllureNUnit]
     public class UserGridTests
     {
         private IPlaywright _playwright;

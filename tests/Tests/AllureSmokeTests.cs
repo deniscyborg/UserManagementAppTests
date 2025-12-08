@@ -6,6 +6,7 @@ using NUnit.Framework;
 namespace Tests
 {   
     [TestFixture]
+    [AllureNUnit]
     [AllureSuite("Allure Smoke")]
     public class AllureSmokeTests
     {

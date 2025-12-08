@@ -9,6 +9,7 @@ using Allure.Net.Commons;
 namespace Tests
 {   
     [TestFixture]
+    [AllureNUnit]
     [AllureSuite("UI: User Form")]
     public class UserFormTests
     {

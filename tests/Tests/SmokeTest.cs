@@ -6,6 +6,7 @@ using Allure.Net.Commons;
 namespace Tests
 {
     [TestFixture]
+    [AllureNUnit]
     [AllureSuite("Smoke")]           
     public class SmokeTest
     {

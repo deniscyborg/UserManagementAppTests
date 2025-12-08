@@ -2,6 +2,7 @@ using NUnit.Framework;
 using Allure.NUnit.Attributes;
 
 [TestFixture]
+[AllureNUnit]
 [AllureSuite("Logic Tests")]
 public class ValidationLogicTests
 {

@@ -6,6 +6,7 @@ using Allure.Net.Commons;       // <-- Для SeverityLevel и других ти
 namespace Tests
 {
     [TestFixture]
+    [AllureNUnit]
     [AllureSuite("Sanity Checks")]
     public class NUnitSanity
     {

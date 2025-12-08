@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace Tests
 {   
     [TestFixture]
+    [AllureNUnit]
     [AllureSuite("User API")]
     public class ApiUserTests
     {

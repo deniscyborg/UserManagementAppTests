@@ -8,6 +8,7 @@ using Allure.NUnit.Attributes;
 namespace UserManagementApp.Tests
 {
     [TestFixture]
+    [AllureNUnit]
     public class UserManagementTests : PageTest
     {
         [Test]
