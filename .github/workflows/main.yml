@@ -36,7 +36,7 @@ jobs:
           dotnet restore --force
           dotnet build --no-restore
           nohup dotnet run --no-build --urls "http://localhost:5000" > ../backend.log 2>&1 &
-          sleep 10
+          sleep 15
           echo "Backend started on port 5000"
 
       - name: Start frontend
@@ -44,19 +44,23 @@ jobs:
           cd frontend
           npm install
           nohup npm run dev > ../frontend.log 2>&1 &
-          sleep 15
+          sleep 25
           echo "Frontend started on port 5173"
 
       - name: Verify services are running
         run: |
-          echo "Checking backend..."
-          curl -v http://localhost:5000 || echo "Backend NOT responding"
-          
-          echo "Checking frontend..."
-          curl -v http://localhost:5173 || echo "Frontend NOT responding"
-          
-          echo "Listing running processes..."
-          ps aux | grep -E "dotnet|node" || echo "No processes found"
+          echo "Waiting for services..."
+          for i in {1..30}; do
+            if curl -s http://localhost:5000/api/users > /dev/null && \
+               curl -s http://localhost:5173 > /dev/null; then
+              echo "Both services are ready!"
+              exit 0
+            fi
+            echo "Attempt $i: Services not ready, waiting..."
+            sleep 2
+          done
+          echo "Services failed to start!"
+          exit 1
 
       - name: Restore test dependencies
         run: dotnet restore tests/tests.csproj
