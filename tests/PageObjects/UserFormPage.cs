@@ -38,7 +38,7 @@ namespace PageObjects
         {
             var submitButton = Page.Locator("button[type='submit']");
             
-            // Ждем видимости кнопки Submit
+            // Жде видимости кнопки Submit
             await submitButton.WaitForAsync(
                 new LocatorWaitForOptions 
                 { 
@@ -47,14 +47,19 @@ namespace PageObjects
                 }
             );
             
-            // Убеждаемся что кнопка не disabled
-            await submitButton.WaitForAsync(
-                new LocatorWaitForOptions 
-                { 
-                    State = WaitForSelectorState.Enabled,
-                    Timeout = 5000
-                }
-            );
+            // Проверяем что кнопка не disabled (пытаемся получить атрибут disabled)
+            var isDisabled = await submitButton.GetAttributeAsync("disabled");
+            if (isDisabled != null)
+            {
+                // Ждем пока disabled атрибут исчезнет
+                await submitButton.WaitForAsync(
+                    new LocatorWaitForOptions 
+                    { 
+                        State = WaitForSelectorState.Visible,
+                        Timeout = 5000
+                    }
+                );
+            }
             
             await submitButton.ClickAsync();
         }
