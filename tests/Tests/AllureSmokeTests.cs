@@ -1,3 +1,4 @@
+using Allure.NUnit;
 using System.Threading.Tasks;
 using Allure.NUnit.Attributes;
 using Allure.Net.Commons;

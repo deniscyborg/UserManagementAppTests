@@ -1,3 +1,4 @@
+using Allure.NUnit;
 using NUnit.Framework;
 using Microsoft.Playwright;
 using PageObjects;

@@ -1,3 +1,4 @@
+using Allure.NUnit;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Allure.NUnit.Attributes;  // <-- Для [AllureSuite], [AllureTag] и т.д.
