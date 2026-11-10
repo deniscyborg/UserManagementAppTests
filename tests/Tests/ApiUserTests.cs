@@ -22,7 +22,8 @@ namespace Tests
         {
             _config = TestConfig.Load();
             _client = new HttpClient();
-            _client.BaseAddress = new System.Uri(_config.ApiBaseUrl);
+            // Завершающий слэш обязателен: иначе относительный путь отбросит сегмент /api
+            _client.BaseAddress = new System.Uri(_config.ApiBaseUrl.TrimEnd('/') + "/");
         }
 
         [TearDown]
@@ -42,7 +43,7 @@ namespace Tests
             var json = JsonSerializer.Serialize(user);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _client.PostAsync("/users", content);
+            var response = await _client.PostAsync("users", content);
 
             Assert.IsTrue(response.IsSuccessStatusCode, "Создание пользователя по API неуспешно: " + response.StatusCode);
             var responseData = await response.Content.ReadAsStringAsync();

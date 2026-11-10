@@ -35,9 +35,9 @@ jobs:
           dotnet clean
           dotnet restore --force
           dotnet build --no-restore
-          nohup dotnet run --no-build --urls "http://localhost:5000" > ../backend.log 2>&1 &
+          nohup dotnet run --no-build --urls "http://localhost:5006" > ../backend.log 2>&1 &
           sleep 15
-          echo "Backend started on port 5000"
+          echo "Backend started on port 5006"
 
       - name: Start frontend
         run: |
@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "Waiting for services..."
           for i in {1..30}; do
-            if curl -s http://localhost:5000/api/users > /dev/null && \
+            if curl -s http://localhost:5006/api/users > /dev/null && \
                curl -s http://localhost:5173 > /dev/null; then
               echo "Both services are ready!"
               exit 0
@@ -80,7 +80,7 @@ jobs:
       - name: Run tests and generate Allure results
         env:
           BASE_URL: "http://localhost:5173"
-          API_BASE_URL: "http://localhost:5000/api"
+          API_BASE_URL: "http://localhost:5006/api"
           BROWSER: "chromium"
         run: dotnet test tests/tests.csproj --no-build --verbosity normal
         continue-on-error: true

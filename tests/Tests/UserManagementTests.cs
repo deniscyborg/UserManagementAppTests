@@ -28,12 +28,14 @@ namespace UserManagementApp.Tests
             await Page.GotoAsync("http://localhost:5173");
             
             // Act
-            await Page.FillAsync("input[name='username']", "TestUser");
-            await Page.FillAsync("input[name='email']", "test@example.com");
+            await Page.ClickAsync("button:has-text('Добавить пользователя')");
+            await Page.FillAsync("input[name='name']", "TestUser");
+            await Page.FillAsync("input[name='surname']", "Testov");
+            await Page.FillAsync("input[name='email']", "testuser@example.ru");
             await Page.ClickAsync("button[type='submit']");
             
             // Assert
-            await Expect(Page.Locator("text=TestUser")).ToBeVisibleAsync();
+            await Expect(Page.Locator("td", new() { HasText = "TestUser" }).First).ToBeVisibleAsync();
         }
     }
 }
