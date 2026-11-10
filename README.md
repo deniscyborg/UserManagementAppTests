@@ -1,90 +1,114 @@
-# UserManagementApp Автотесты
+# User Management App — Test Automation
 
-[![Build Status](https://github.com/deniscyborg/UserManagementAppTests/actions/workflows/dotnet-allure.yml/badge.svg)](https://github.com/deniscyborg/UserManagementAppTests/actions/workflows/dotnet-allure.yml)
+[![CI](https://github.com/deniscyborg/UserManagementAppTests/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/deniscyborg/UserManagementAppTests/actions/workflows/main.yml)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)
+![Playwright](https://img.shields.io/badge/Playwright-.NET-2EAD33)
+![Allure](https://img.shields.io/badge/report-Allure-orange)
 
-**Приложение:** [http://usermanagementapp.com/](http://usermanagementapp.com/)  
-**Отчет Allure:** [http://report.usermanagementapp.com/](http://report.usermanagementapp.com/)
+A small full-stack application and the C# test framework that guards it.
+REST API and browser UI tests run on every push in GitHub Actions, the results are published
+as an Allure report, and the app is deployed only when the whole suite is green.
 
----
+| | |
+|---|---|
+| **Live demo** | https://usermanagementapp.com |
+| **Project showcase** | https://report.usermanagementapp.com |
+| **Allure report** | https://report.usermanagementapp.com/allure/ |
 
-## 1. Структура проекта
+![Application screenshot](docs/app.png)
 
-- PageObjects/ — классы для управления UI (Playwright)
-- Tests/ — классы тестов (UI и API)
-- appsettings.json — хранит BASE_URL, BROWSER, REMOTE
-- TestConfig.cs — загрузка переменных окружения
-- README.md — краткая документация
-- Tests.csproj — проект автотестов
+## Tech stack
 
-![Структура проекта](https://private-user-images.githubusercontent.com/26152246/517916925-89e0feb9-d53a-4e1c-82b9-a18a1889a61b.png)
+| Layer | Tools |
+|---|---|
+| Tests | C#, .NET 10, NUnit 4, Playwright for .NET, Allure.NUnit |
+| Backend | ASP.NET Core 10 Web API (in-memory storage) |
+| Frontend | React 19, Vite |
+| Infrastructure | Docker Compose, Nginx, GitHub Actions |
 
----
+## Test strategy
 
-## 2. Page Object — минимальный пример
+**API tests** (`tests/Api`) cover the business rules quickly and in detail:
+full CRUD for `/api/users`, validation errors (`400` with ProblemDetails), duplicate email
+(`409`, case-insensitive), missing resources (`404`), the `Location` header and input trimming.
 
-```csharp
-// tests/PageObjects/UserGridPage.cs
-using Microsoft.Playwright;
+**UI tests** (`tests/Ui`) cover real user journeys in Chromium: adding, editing and deleting users,
+client-side validation for every field, a server error surfaced in the UI, search and empty states,
+cancel and keyboard flows.
 
-public class UserGridPage {
-    private readonly IPage Page;
-    public UserGridPage(IPage page) => Page = page;
+Design principles:
 
-    public async Task OpenAsync() => await Page.GotoAsync("users");
+- **Isolated data.** Every test creates its own users with unique emails and removes them in teardown,
+  so tests are order-independent and run in parallel.
+- **Fast arrange via API.** UI tests prepare data through the API and use the browser only for the
+  behaviour under test.
+- **Page Object model** with accessible locators (`GetByRole`, `GetByLabel`).
+- **Debuggable failures.** A failed UI test attaches a full-page screenshot and a Playwright trace
+  to the Allure report.
+- **Honest CI.** Any failing test turns the build red and blocks the deployment; the report is still
+  published, with history and trends across runs.
 
-    public async Task<List<string>> GetUserNamesAsync() {
-        // Используй актуальный селектор для таблицы
-        return await Page.Locator(".user-row .user-name").AllInnerTextsAsync();
-    }
-}
+## Pipeline
+
+```mermaid
+flowchart LR
+    push[Push / PR] --> build[Build backend + frontend]
+    build --> services[Start services<br/>wait for /health]
+    services --> tests[API + UI tests]
+    tests --> report[Allure report<br/>always published]
+    tests -- green only --> deploy[Deploy with Docker Compose]
+    deploy --> smoke[Smoke check]
 ```
 
----
+## Project structure
 
-## 3. Инструкции запуска
-
-**Зависимости:**
-- .NET 8 SDK
-- Playwright (устанавливается командой `playwright install`)
-
-**Переменные окружения:**
-- `BASE_URL` — адрес фронта (например, http://localhost:5173)
-- `BROWSER` — chromium / firefox / webkit
-- `REMOTE` — адрес Selenium Grid (опционально)
-
-> Рекомендуется задавать через `appsettings.json` или ENV.
-
-**Запуск тестов:**
-```bash
-dotnet test
 ```
-Для отдельного теста:
-```bash
-dotnet test --filter "FullyQualifiedName~Tests.ApiUserTests"
+backend/               ASP.NET Core Web API
+  Controllers/         UsersController — /api/users
+  Services/            in-memory repository
+frontend/              React + Vite single-page app
+tests/
+  Api/                 REST API tests
+  Ui/                  Playwright UI tests
+  Pages/               Page Objects
+  Infrastructure/      settings, API client, test data, base classes
+showcase/              static project page published next to the Allure report
+.github/workflows/     CI/CD pipeline
 ```
 
----
+## Running locally
 
-## 4. Краткий план автоматизации
+Requirements: .NET 10 SDK, Node.js 22, PowerShell (for the Playwright installer).
 
-- API-тесты: создание, чтение, изменение, удаление пользователя (CRUD)
-- UI-тесты: добавление пользователя через форму, проверка отображения в таблице
+```sh
+# 1. Backend on http://localhost:5006
+dotnet run --project backend
 
----
+# 2. Frontend on http://localhost:5173 (proxies /api to the backend)
+cd frontend && npm ci && npm run dev
 
-## 5. Базовые метрики
+# 3. Tests
+dotnet build tests
+pwsh tests/bin/Debug/net10.0/playwright.ps1 install chromium
+dotnet test tests
+```
 
-- Процент прохождения тестов
-- Количество ошибок по категориям (функционал, валидация, UI, интеграция)
-- Отчёты Allure (интеграция с CI/CD)
+Test settings come from environment variables:
 
-_Автоматизация позволяет быстро выявлять ошибки, отслеживать работу форм и API, контролировать стабильность на всех конфигурациях._
+| Variable | Default |
+|---|---|
+| `BASE_URL` | `http://localhost:5173` |
+| `API_BASE_URL` | `http://localhost:5006/api` |
+| `BROWSER` | `chromium` (also `firefox`, `webkit`) |
+| `HEADED` | unset — set to `1` to watch the browser |
 
----
+To view the Allure report locally after a run:
 
-## CI/CD тесты деплой
+```sh
+allure serve tests/bin/Debug/net10.0/allure-results
+```
 
-- Test Deploy — 24.11.2025 07:11:56
-- CI/CD Test — 24.11.2025 07:24:50
-- CI/CD Test — 24.11.2025 07:30:15
-- CI/CD Test — 24.11.2025 07:51:14
+## Author
+
+**Denis Davydov** — SDET / QA Automation Infrastructure Engineer, Berlin.
+[LinkedIn](https://www.linkedin.com/in/denis-davydov-72bb51338/)
