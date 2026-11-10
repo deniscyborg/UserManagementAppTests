@@ -1,17 +1,14 @@
-# Используем официальный .NET SDK для сборки
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
-
-# Копируем проект (*.csproj) и восстанавливаем зависимости
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
 COPY backend.csproj ./
 RUN dotnet restore
-
-# Копируем все остальные исходники и публикуем
 COPY . ./
-RUN dotnet publish -c Release -o out
+RUN dotnet publish -c Release -o /app --no-restore
 
-# Используем рантайм для запуска приложения
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
-COPY --from=build /app/out .
+COPY --from=build /app .
+USER app
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "backend.dll"]
