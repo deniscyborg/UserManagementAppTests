@@ -138,11 +138,12 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            set -e
             cd /root/UserManagementAppTests
-            git pull origin main
-            docker-compose down
+            git fetch origin main
+            git reset --hard origin/main
             docker-compose build
-            docker-compose up -d
+            docker-compose up -d --remove-orphans
             rm -rf /var/www/report/*
 
       - name: Copy Allure report to server

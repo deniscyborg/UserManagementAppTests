@@ -1,41 +1,23 @@
-version: '3.8'
-
 services:
   backend:
     build:
       context: ./backend
     container_name: usermanagement-backend
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-    depends_on:
-      - db
 
   frontend:
     build:
       context: ./frontend
     container_name: usermanagement-frontend
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - NODE_ENV=production
     depends_on:
       - backend
-
-  db:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: usermanagementapptests-db-1
-    ports:
-      - "1533:1433"
-    environment:
-      SA_PASSWORD: "${DB_SA_PASSWORD}"
-      ACCEPT_EULA: "Y"
-    volumes:
-      - dbdata:/var/opt/mssql
-
-volumes:
-  dbdata:
-
-
