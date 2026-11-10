@@ -21,7 +21,7 @@ public class UsersUiTests : UiTestBase
     {
         await _usersPage.OpenAsync();
 
-        await Expect(Page).ToHaveTitleAsync("User Management");
+        await Expect(Page).ToHaveTitleAsync("User Management App · Live demo");
         await Expect(_usersPage.AddUserButton).ToBeEnabledAsync();
         await Expect(_usersPage.Search).ToBeVisibleAsync();
     }
