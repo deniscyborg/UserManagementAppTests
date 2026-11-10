@@ -116,20 +116,22 @@ function App() {
   }
   
   function handleEdit(user) {
-    fetch("/api/users/" + editing.login, {
+    fetch("/api/users/" + editing.id, {
       method: "PUT", 
-      body: JSON.stringify({ ...user, login: editing.login }),
+      body: JSON.stringify(user),
       headers: { "Content-Type": "application/json" }
     })
     .then(res => res.ok
-      ? res.json().then(u => setUsers(prev => prev.map(x => x.login === u.login ? u : x)))
+      ? res.json().then(u => setUsers(prev => prev.map(x => x.id === u.id ? u : x)))
       : res.text().then(alert));
     setEditing(null);
   }
   
-  function handleDelete(login) {
-    fetch("/api/users/" + login, { method: "DELETE" })
-      .then(() => setUsers(users.filter(u => u.login !== login)));
+  function handleDelete(id) {
+    fetch("/api/users/" + id, { method: "DELETE" })
+      .then(res => res.ok
+        ? setUsers(prev => prev.filter(u => u.id !== id))
+        : res.text().then(alert));
   }
   
   const filtered = users.filter(u => u.login?.includes(filter));
@@ -164,7 +166,7 @@ function App() {
         </thead>
         <tbody>
           {filtered.map(u =>
-            <tr key={u.login}
+            <tr key={u.id}
                 style={editing && editing.login === u.login ? { background: "#cce" } : {}}
                 onDoubleClick={() => setEditing(u)}
             >
@@ -181,7 +183,7 @@ function App() {
                   Редактировать
                 </button>
                 <button 
-                  onClick={() => handleDelete(u.login)}
+                  onClick={() => handleDelete(u.id)}
                   className="btn-delete"
                 >
                   Удалить

@@ -46,6 +46,27 @@ namespace backend.Controllers
             return user != null ? Ok(user) : NotFound();
         }
 
+        [HttpPut("{id}")]
+        public ActionResult<User> Update(int id, [FromBody] AddUserDto dto)
+        {
+            var user = users.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+                return NotFound();
+
+            if (string.IsNullOrWhiteSpace(dto.Name) ||
+                string.IsNullOrWhiteSpace(dto.Surname) ||
+                string.IsNullOrWhiteSpace(dto.Email))
+            {
+                return BadRequest(new { error = "All fields are required" });
+            }
+
+            user.Name = dto.Name;
+            user.Surname = dto.Surname;
+            user.Email = dto.Email;
+            user.Login = dto.Email.Split('@')[0];
+            return Ok(user);
+        }
+
         [HttpDelete("{id}")]
         public ActionResult Delete(int id)
         {
