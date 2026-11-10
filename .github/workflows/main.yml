@@ -1,142 +1,188 @@
-name: .NET CI - Allure
+name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  NODE_VERSION: "22"
+  ALLURE_VERSION: "2.27.0"
+  REPORT_URL: "https://report.usermanagementapp.com"
+  RESULTS_DIR: tests/bin/Release/net10.0/allure-results
 
 jobs:
-  build-and-test:
+  test:
+    name: Tests (API + UI)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: "http://localhost:5173"
+      API_BASE_URL: "http://localhost:5006/api"
+      BROWSER: "chromium"
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET SDK for tests
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Setup .NET SDK for backend
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-node@v4
         with:
-          dotnet-version: '8.0.x'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Start backend
         run: |
-          cd backend
-          dotnet clean
-          dotnet restore --force
-          dotnet build --no-restore
-          nohup dotnet run --no-build --urls "http://localhost:5006" > ../backend.log 2>&1 &
-          sleep 15
-          echo "Backend started on port 5006"
+          dotnet build backend -c Release
+          nohup dotnet run --project backend -c Release --no-build --urls "http://localhost:5006" > backend.log 2>&1 &
 
       - name: Start frontend
+        working-directory: frontend
         run: |
-          cd frontend
-          npm install
-          nohup npm run dev > ../frontend.log 2>&1 &
-          sleep 25
-          echo "Frontend started on port 5173"
+          npm ci
+          nohup npx vite --port 5173 --strictPort > ../frontend.log 2>&1 &
 
-      - name: Verify services are running
+      - name: Wait for services
         run: |
-          echo "Waiting for services..."
-          for i in {1..30}; do
-            if curl -s http://localhost:5006/api/users > /dev/null && \
-               curl -s http://localhost:5173 > /dev/null; then
-              echo "Both services are ready!"
-              exit 0
-            fi
-            echo "Attempt $i: Services not ready, waiting..."
-            sleep 2
-          done
-          echo "Services failed to start!"
-          exit 1
-
-      - name: Restore test dependencies
-        run: dotnet restore tests/tests.csproj
+          curl --silent --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:5006/health
+          curl --silent --fail --retry 30 --retry-delay 2 --retry-all-errors --output /dev/null http://localhost:5173
 
       - name: Build tests
-        run: dotnet build tests/tests.csproj --no-restore
-      
-      - name: List tests
-        run: dotnet test tests/tests.csproj --list-tests --no-build
+        run: dotnet build tests -c Release
 
-      - name: Install Playwright browsers
-        run: pwsh tests/bin/Debug/net6.0/playwright.ps1 install --with-deps
+      - name: Install Playwright browser
+        run: pwsh tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
-      - name: Clean Allure results
-        run: rm -rf tests/bin/Debug/net6.0/allure-results
+      - name: Run tests
+        run: dotnet test tests -c Release --no-build --logger "console;verbosity=normal"
 
-      - name: Run tests and generate Allure results
-        env:
-          BASE_URL: "http://localhost:5173"
-          API_BASE_URL: "http://localhost:5006/api"
-          BROWSER: "chromium"
-        run: dotnet test tests/tests.csproj --no-build --verbosity normal
-        continue-on-error: true
-
-      - name: Show backend logs
+      - name: Upload Allure results
         if: always()
-        run: cat backend.log || echo "No backend logs"
-
-      - name: Show frontend logs
-        if: always()
-        run: cat frontend.log || echo "No frontend logs"
-
-      - name: Upload Allure results as artifact
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: allure-results
-          path: tests/bin/Debug/net6.0/allure-results
+          path: ${{ env.RESULTS_DIR }}
+          if-no-files-found: ignore
 
-      - name: Install Allure CLI
-        if: always()
-        run: |
-          ALLURE_VERSION=2.27.0
-          wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
-          unzip allure-${ALLURE_VERSION}.zip -d /opt/
-          sudo ln -s /opt/allure-${ALLURE_VERSION}/bin/allure /usr/bin/allure
-
-      - name: Generate Allure HTML report
-        if: always()
-        run: allure generate tests/bin/Debug/net6.0/allure-results -o allure-report --clean
-
-      - name: Upload Allure HTML report
+      - name: Upload service logs
+        if: failure()
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: allure-report
-          path: allure-report
+          name: service-logs
+          path: |
+            backend.log
+            frontend.log
 
-  deploy:
-    needs: build-and-test
+  report:
+    name: Publish Allure report and showcase
+    needs: test
+    # Отчёт публикуется и при упавших тестах — именно тогда он нужнее всего
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && always()
+    timeout-minutes: 10
 
     steps:
-      - name: Download Allure report
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report
+      - uses: actions/checkout@v4
 
-      - name: Deploy app to server
-        uses: appleboy/ssh-action@v1.0.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Restore history from the published report
+        run: |
+          mkdir -p allure-results/history
+          for f in history.json history-trend.json duration-trend.json categories-trend.json retry-trend.json; do
+            # http + --location работает и до, и после включения HTTPS;
+            # второй адрес — старый отчёт, лежавший в корне сайта
+            curl --silent --fail --location "http://report.usermanagementapp.com/allure/history/$f" -o "allure-results/history/$f" \
+              || curl --silent --fail --location "http://report.usermanagementapp.com/history/$f" -o "allure-results/history/$f" \
+              || echo "No previous $f"
+          done
+
+      - name: Describe environment
+        run: |
+          cat > allure-results/executor.json <<EOF
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "buildName": "Run #${{ github.run_number }}",
+            "buildOrder": ${{ github.run_number }},
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "reportUrl": "$REPORT_URL/allure/"
+          }
+          EOF
+          cat > allure-results/environment.properties <<EOF
+          Browser=Chromium (Playwright)
+          .NET=${{ env.DOTNET_VERSION }}
+          Commit=${{ github.sha }}
+          EOF
+
+      - name: Generate report
+        run: |
+          curl --silent --fail --location -o allure.zip \
+            "https://github.com/allure-framework/allure2/releases/download/$ALLURE_VERSION/allure-$ALLURE_VERSION.zip"
+          unzip -q allure.zip -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/allure-$ALLURE_VERSION/bin/allure" generate allure-results --clean -o allure-report
+
+      - name: Prepare server directories
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            mkdir -p /var/www/report
+            find /var/www/report -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+            mkdir -p /var/www/report/allure
+
+      - name: Upload showcase
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "showcase/*"
+          target: "/var/www/report/"
+          strip_components: 1
+
+      - name: Upload Allure report
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "allure-report/*"
+          target: "/var/www/report/allure/"
+          strip_components: 1
+
+  deploy:
+    name: Deploy application
+    needs: test
+    # Приложение выкатывается только при зелёных тестах
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 15m
           script: |
             set -e
             cd /root/UserManagementAppTests
@@ -144,24 +190,8 @@ jobs:
             git reset --hard origin/main
             docker-compose build
             docker-compose up -d --remove-orphans
-            rm -rf /var/www/report/*
+            docker image prune -f
 
-      - name: Copy Allure report to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "allure-report/*"
-          target: "/var/www/report/"
-          strip_components: 1
-
-      - name: Verify report deployment
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            ls -la /var/www/report/
-            curl -I http://report.usermanagementapp.com/
+      - name: Smoke check
+        run: |
+          curl --silent --fail --location --retry 10 --retry-delay 3 --retry-all-errors http://usermanagementapp.com/api/users
