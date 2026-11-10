@@ -1,229 +1,157 @@
-import './App.css';
-import React, { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usersApi } from "./api";
+import Modal from "./components/Modal";
+import Toast from "./components/Toast";
+import UserForm from "./components/UserForm";
+import UserTable from "./components/UserTable";
 
-function formatDate(date) {
-  if (!date) return "";
-  const d = new Date(date);
-  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth()+1).padStart(2, '0')}.${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
+export default function App() {
+  const [users, setUsers] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [filter, setFilter] = useState("");
+  const [modal, setModal] = useState(null); // { mode: "add" } | { mode: "edit", user }
+  const [toast, setToast] = useState(null);
 
-function UserForm({ onSubmit, initial, onCancel }) {
-  const [name, setName] = useState(initial?.name || "");
-  const [surname, setSurname] = useState(initial?.surname || "");
-  const [email, setEmail] = useState(initial?.email || "");
-  const [error, setError] = useState({});
-  
-  function validate() {
-    return {
-      name: name.length >= 3 ? null : "Минимум 3 символа",
-      surname: surname.length >= 3 ? null : "Минимум 3 символа",
-      email: /^[^\@\s]+@[^\@\s]+\.(ru)$/i.test(email)
-        ? null
-        : "Формат email должен быть @... и заканчиваться на .ru"
+  const notify = useCallback((type, message) => setToast({ type, message }), []);
+  const closeToast = useCallback(() => setToast(null), []);
+  const closeModal = useCallback(() => setModal(null), []);
+
+  const fetchUsers = useCallback(
+    () =>
+      usersApi
+        .getAll()
+        .then((data) => {
+          setUsers(data);
+          setStatus("ready");
+        })
+        .catch(() => setStatus("error")),
+    []
+  );
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  function retryLoad() {
+    setStatus("loading");
+    fetchUsers();
+  }
+
+  const filtered = useMemo(() => {
+    const query = filter.trim().toLowerCase();
+    return query ? users.filter((u) => u.login.toLowerCase().includes(query)) : users;
+  }, [users, filter]);
+
+  async function handleAdd(data) {
+    try {
+      const created = await usersApi.create(data);
+      setUsers((prev) => [...prev, created]);
+      setModal(null);
+      notify("success", "Пользователь добавлен");
+    } catch (e) {
+      notify("error", e.message);
     }
   }
-  
-  function handleSubmit(e) {
-    e.preventDefault();
-    const eobj = validate();
-    setError(eobj);
-    if (Object.values(eobj).some(Boolean)) return;
-    onSubmit({ name, surname, email });
+
+  async function handleEdit(data) {
+    try {
+      const updated = await usersApi.update(modal.user.id, data);
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      setModal(null);
+      notify("success", "Изменения сохранены");
+    } catch (e) {
+      notify("error", e.message);
+    }
   }
-  
-  return (
-    <form onSubmit={handleSubmit} className="user-form">
-      <div className="form-group">
-        <label>Имя:</label>
-        <input 
-          type="text"
-          name="name"
-          value={name} 
-          onChange={e => setName(e.target.value)} 
-          placeholder="Введите имя"
-        />
-        {error.name && <div className="error-message">{error.name}</div>}
-      </div>
-      
-      <div className="form-group">
-        <label>Фамилия:</label>
-        <input 
-          type="text"
-          name="surname"
-          value={surname} 
-          onChange={e => setSurname(e.target.value)} 
-          placeholder="Введите фамилию"
-        />
-        {error.surname && <div className="error-message">{error.surname}</div>}
-      </div>
-      
-      <div className="form-group">
-        <label>Email:</label>
-        <input 
-          type="email"
-          name="email"
-          value={email} 
-          onChange={e => setEmail(e.target.value)} 
-          placeholder="example@mail.ru"
-        />
-        {error.email && <div className="error-message">{error.email}</div>}
-      </div>
-      
-      <div className="form-actions">
-        <button 
-          type="submit" 
-          disabled={Object.values(validate()).some(Boolean)}
-          className="btn-primary"
-        >
-          {initial ? "Сохранить" : "Добавить"}
-        </button>
-        {onCancel && (
-          <button 
-            type="button" 
-            onClick={onCancel}
-            className="btn-secondary"
-          >
-            Отмена
+
+  async function handleDelete(user) {
+    try {
+      await usersApi.remove(user.id);
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+      notify("success", `Пользователь ${user.login} удалён`);
+    } catch (e) {
+      notify("error", e.message);
+    }
+  }
+
+  function renderContent() {
+    if (status === "loading") {
+      return <div className="state">Загрузка…</div>;
+    }
+    if (status === "error") {
+      return (
+        <div className="state">
+          <p>Не удалось загрузить пользователей.</p>
+          <button type="button" className="btn btn-secondary" onClick={retryLoad}>
+            Повторить
           </button>
-        )}
-      </div>
-    </form>
-  );
-}
+        </div>
+      );
+    }
+    if (users.length === 0) {
+      return (
+        <div className="state">
+          <p className="state-title">Пользователей пока нет</p>
+          <p>Добавьте первого — он появится в этой таблице.</p>
+        </div>
+      );
+    }
+    if (filtered.length === 0) {
+      return <div className="state">Никого не найдено по запросу «{filter}»</div>;
+    }
+    return (
+      <UserTable
+        users={filtered}
+        onEdit={(user) => setModal({ mode: "edit", user })}
+        onDelete={handleDelete}
+      />
+    );
+  }
 
-function App() {
-  const [users, setUsers] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [modal, setModal] = useState(null);
-  const [filter, setFilter] = useState("");
-
-  useEffect(() => { 
-    fetch("/api/users")
-      .then(res => res.json())
-      .then(setUsers);
-   }, []);
-   
-  function handleAdd(user) {
-    fetch("/api/users", {
-      method: "POST", 
-      body: JSON.stringify(user),
-      headers: { "Content-Type": "application/json" }
-    })
-    .then(res => res.ok
-      ? res.json().then(u => setUsers(prev => [...prev, u]))
-      : res.text().then(alert));
-    setModal(null);
-  }
-  
-  function handleEdit(user) {
-    fetch("/api/users/" + editing.id, {
-      method: "PUT", 
-      body: JSON.stringify(user),
-      headers: { "Content-Type": "application/json" }
-    })
-    .then(res => res.ok
-      ? res.json().then(u => setUsers(prev => prev.map(x => x.id === u.id ? u : x)))
-      : res.text().then(alert));
-    setEditing(null);
-  }
-  
-  function handleDelete(id) {
-    fetch("/api/users/" + id, { method: "DELETE" })
-      .then(res => res.ok
-        ? setUsers(prev => prev.filter(u => u.id !== id))
-        : res.text().then(alert));
-  }
-  
-  const filtered = users.filter(u => u.login?.includes(filter));
-  
   return (
-    <div className="main-container">
-      <div className="controls">
-        <button 
-          onClick={() => setModal("add")}
-          className="btn-primary"
-        >
-          Добавить пользователя
-        </button>
-        <input 
-          placeholder="Фильтр по логину" 
-          value={filter} 
-          onChange={e => setFilter(e.target.value)}
-          className="filter-input"
-        />
-      </div>
-      
-      <table className="user-table">
-        <thead>
-          <tr>
-            <th>Логин</th>
-            <th>Имя</th>
-            <th>Фамилия</th>
-            <th>Email</th>
-            <th>Дата посещения</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(u =>
-            <tr key={u.id}
-                style={editing && editing.login === u.login ? { background: "#cce" } : {}}
-                onDoubleClick={() => setEditing(u)}
-            >
-              <td>{u.login}</td>
-              <td>{u.name}</td>
-              <td>{u.surname}</td>
-              <td>{u.email}</td>
-              <td>{formatDate(u.lastVisited)}</td>
-              <td>
-                <button 
-                  onClick={() => setEditing(u)}
-                  className="btn-edit"
-                >
-                  Редактировать
-                </button>
-                <button 
-                  onClick={() => handleDelete(u.id)}
-                  className="btn-delete"
-                >
-                  Удалить
-                </button>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="page">
+      <main className="card">
+        <header className="card-header">
+          <div>
+            <h1>Пользователи</h1>
+            <p className="subtitle">
+              {status === "ready" ? `Всего: ${users.length}` : "Управление учётными записями"}
+            </p>
+          </div>
+          <button type="button" className="btn btn-primary" onClick={() => setModal({ mode: "add" })}>
+            <span aria-hidden="true">+</span> Добавить пользователя
+          </button>
+        </header>
 
-      {/* Модальное окно редактирования */}
-      {editing && (
-        <>
-          <div className="modal-overlay" onClick={() => setEditing(null)}></div>
-          <div className="modal-content">
-            <h2>Редактирование пользователя</h2>
-            <UserForm 
-              initial={editing} 
-              onSubmit={handleEdit} 
-              onCancel={() => setEditing(null)} 
-            />
-          </div>
-        </>
+        <div className="toolbar">
+          <input
+            type="search"
+            className="filter-input"
+            placeholder="Поиск по логину"
+            aria-label="Поиск по логину"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
+
+        {renderContent()}
+      </main>
+
+      {modal && (
+        <Modal
+          title={modal.mode === "add" ? "Новый пользователь" : "Редактирование пользователя"}
+          onClose={closeModal}
+        >
+          <UserForm
+            initial={modal.user}
+            submitLabel={modal.mode === "add" ? "Добавить" : "Сохранить"}
+            onSubmit={modal.mode === "add" ? handleAdd : handleEdit}
+            onCancel={closeModal}
+          />
+        </Modal>
       )}
-      
-      {/* Модальное окно добавления */}
-      {modal === "add" && (
-        <>
-          <div className="modal-overlay" onClick={() => setModal(null)}></div>
-          <div className="modal-content">
-            <h2>Добавить нового пользователя</h2>
-            <UserForm 
-              onSubmit={handleAdd} 
-              onCancel={() => setModal(null)} 
-            />
-          </div>
-        </>
-      )}
+
+      <Toast toast={toast} onClose={closeToast} />
     </div>
   );
 }
-
-export default App;
