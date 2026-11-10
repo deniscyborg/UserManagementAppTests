@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management App · Test Automation</title>
+    <meta name="description" content="C# test automation showcase: REST API and Playwright UI tests running in GitHub Actions with a live Allure report. By Denis Davydov, SDET." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a class="brand" href="./">
+          <img src="favicon.svg" alt="" width="24" height="24" />
+          <span>User Management App</span>
+        </a>
+        <nav class="topnav" aria-label="Main">
+          <a href="#status">Status</a>
+          <a href="#strategy">Strategy</a>
+          <a href="#pipeline">Pipeline</a>
+          <a href="#author">Author</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container">
+        <p class="eyebrow">Test automation showcase</p>
+        <h1>A full-stack app and the C# test framework that guards it</h1>
+        <p class="lead">
+          React&nbsp;+&nbsp;ASP.NET&nbsp;Core application with REST API and browser UI tests written in
+          C#, NUnit and Playwright. Every push runs the suite in GitHub Actions, publishes an Allure
+          report and deploys the app only when everything is green.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://usermanagementapp.com">Open live demo</a>
+          <a class="btn btn-secondary" href="allure/">Allure report</a>
+          <a class="btn btn-secondary" href="https://github.com/deniscyborg/UserManagementAppTests">Source on GitHub</a>
+        </div>
+      </section>
+
+      <section id="status" class="container section" aria-labelledby="status-title">
+        <div class="section-head">
+          <h2 id="status-title">Latest test run</h2>
+          <p class="muted" id="run-meta">Loading report data…</p>
+        </div>
+
+        <div class="stats" id="stats" hidden>
+          <div class="stat stat-hero">
+            <span class="stat-label">Pass rate</span>
+            <span class="stat-value" id="stat-rate">—</span>
+            <span class="status-pill" id="stat-status"></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label"><i class="key key-passed"></i>Passed</span>
+            <span class="stat-value" id="stat-passed">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label"><i class="key key-failed"></i>Failed</span>
+            <span class="stat-value" id="stat-failed">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label"><i class="key key-broken"></i>Broken</span>
+            <span class="stat-value" id="stat-broken">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Duration</span>
+            <span class="stat-value" id="stat-duration">—</span>
+          </div>
+        </div>
+
+        <figure class="card chart-card" id="trend" hidden>
+          <figcaption class="chart-head">
+            <span class="chart-title">Results of recent runs</span>
+            <span class="legend" aria-hidden="true">
+              <span><i class="key key-passed"></i>Passed</span>
+              <span><i class="key key-failed"></i>Failed</span>
+              <span><i class="key key-broken"></i>Broken</span>
+              <span><i class="key key-skipped"></i>Skipped</span>
+            </span>
+          </figcaption>
+          <div class="chart" id="trend-chart"></div>
+          <div class="tooltip" id="trend-tooltip" role="status" hidden></div>
+          <details class="table-view">
+            <summary>Show as table</summary>
+            <table id="trend-table">
+              <thead>
+                <tr><th>Run</th><th>Passed</th><th>Failed</th><th>Broken</th><th>Skipped</th><th>Total</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </details>
+        </figure>
+
+        <p class="card notice" id="status-error" hidden>
+          Report data is not available right now. Open the <a href="allure/">Allure report</a> directly.
+        </p>
+      </section>
+
+      <section id="strategy" class="container section" aria-labelledby="strategy-title">
+        <div class="section-head">
+          <h2 id="strategy-title">Test strategy</h2>
+          <p class="muted">Business rules are checked fast through the API; the browser covers real user journeys.</p>
+        </div>
+
+        <div class="grid grid-2">
+          <article class="card">
+            <h3>REST API tests</h3>
+            <p class="muted">HttpClient + NUnit, run in parallel.</p>
+            <ul class="checks">
+              <li>Full CRUD for <code>/api/users</code> with status codes and response bodies</li>
+              <li>Validation: missing and short fields, malformed email → <code>400</code> ProblemDetails</li>
+              <li>Business rules: duplicate email (case-insensitive) → <code>409</code></li>
+              <li>Missing resources → <code>404</code>, <code>Location</code> header, trimming input</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>UI end-to-end tests</h3>
+            <p class="muted">Playwright for .NET, Page Object model.</p>
+            <ul class="checks">
+              <li>Add, edit and delete users through the real interface</li>
+              <li>Client-side validation messages for each field</li>
+              <li>Server errors surfaced to the user (duplicate email)</li>
+              <li>Search, empty states, keyboard (Esc) and cancel flows</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="grid grid-3 principles">
+          <div>
+            <h3>Isolated data</h3>
+            <p class="muted">Each test creates its own users with unique emails and deletes them afterwards, so tests run in any order and in parallel.</p>
+          </div>
+          <div>
+            <h3>Fast arrange via API</h3>
+            <p class="muted">UI tests prepare data through the API and spend browser time only on the behaviour under test.</p>
+          </div>
+          <div>
+            <h3>Debuggable failures</h3>
+            <p class="muted">A failed UI test attaches a full-page screenshot and a Playwright trace to the Allure report.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="pipeline" class="container section" aria-labelledby="pipeline-title">
+        <div class="section-head">
+          <h2 id="pipeline-title">CI/CD pipeline</h2>
+          <p class="muted">GitHub Actions on every push and pull request.</p>
+        </div>
+
+        <ol class="pipeline">
+          <li><span class="step-num">1</span><strong>Build</strong><span class="muted">.NET 10 backend, Vite frontend</span></li>
+          <li><span class="step-num">2</span><strong>Start services</strong><span class="muted">wait for <code>/health</code></span></li>
+          <li><span class="step-num">3</span><strong>Run tests</strong><span class="muted">API + UI in parallel, red build on any failure</span></li>
+          <li><span class="step-num">4</span><strong>Allure report</strong><span class="muted">published always, with run history</span></li>
+          <li><span class="step-num">5</span><strong>Deploy</strong><span class="muted">Docker Compose, only when green, then smoke check</span></li>
+        </ol>
+
+        <ul class="chips" aria-label="Tech stack">
+          <li>C# / .NET 10</li>
+          <li>NUnit 4</li>
+          <li>Playwright</li>
+          <li>Allure</li>
+          <li>ASP.NET Core</li>
+          <li>React + Vite</li>
+          <li>Docker Compose</li>
+          <li>GitHub Actions</li>
+          <li>Nginx</li>
+        </ul>
+      </section>
+
+      <section id="author" class="container section" aria-labelledby="author-title">
+        <div class="card author">
+          <div class="avatar" aria-hidden="true">DD</div>
+          <div class="author-body">
+            <h2 id="author-title">Denis Davydov</h2>
+            <p class="author-role">SDET · QA Automation Infrastructure Engineer · Berlin</p>
+            <p class="muted">
+              I build test automation and the infrastructure around it from scratch: UI, API and E2E suites
+              in C# and Python with Playwright and Appium, containerized test runs and CI/CD pipelines.
+              Available for freelance contracts across Germany and the EU.
+            </p>
+            <div class="author-links">
+              <a class="btn btn-primary" href="https://www.linkedin.com/in/denis-davydov-72bb51338/">LinkedIn</a>
+              <a class="btn btn-secondary" href="https://github.com/deniscyborg">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="container footer muted">
+      Built and tested by Denis Davydov. Report data updates after every CI run.
+    </footer>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
