@@ -109,6 +109,20 @@ jobs:
               || curl --silent --fail --location "http://report.usermanagementapp.com/history/$f" -o "allure-results/history/$f" \
               || echo "No previous $f"
           done
+          # Old runs had Russian failure messages; drop any non-English status details from the history
+          if [ -f allure-results/history/history.json ]; then
+            python3 - <<'PY'
+          import json, re
+          path = "allure-results/history/history.json"
+          cyrillic = re.compile("[%s-%s]" % (chr(0x400), chr(0x4FF)))
+          data = json.load(open(path, encoding="utf-8"))
+          for entry in data.values():
+              for item in entry.get("items", []):
+                  if cyrillic.search(item.get("statusDetails") or ""):
+                      item.pop("statusDetails")
+          json.dump(data, open(path, "w", encoding="utf-8"), ensure_ascii=False)
+          PY
+          fi
 
       - name: Describe environment
         run: |
