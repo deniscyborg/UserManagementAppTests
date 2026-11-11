@@ -3,14 +3,14 @@ using System.Net.Http.Json;
 namespace UserManagement.Tests.Infrastructure;
 
 /// <summary>
-/// Тонкая обёртка над HttpClient для /api/users.
-/// Возвращает сырой HttpResponseMessage, чтобы тесты сами проверяли коды ответа.
+/// Thin wrapper over HttpClient for /api/users.
+/// Returns the raw HttpResponseMessage so tests check status codes themselves.
 /// </summary>
 public sealed class UsersApiClient : IDisposable
 {
     private readonly HttpClient _http = new()
     {
-        // Завершающий слэш обязателен: иначе относительный путь отбросит сегмент /api
+        // The trailing slash is required: otherwise a relative path drops the /api segment
         BaseAddress = new Uri(TestSettings.ApiUrl + "/"),
         Timeout = TimeSpan.FromSeconds(15),
     };
@@ -25,7 +25,7 @@ public sealed class UsersApiClient : IDisposable
 
     public Task<HttpResponseMessage> DeleteAsync(int id) => _http.DeleteAsync($"users/{id}");
 
-    /// <summary>Создаёт пользователя для подготовки данных и падает, если API ответил ошибкой.</summary>
+    /// <summary>Creates a user for test setup and fails if the API returns an error.</summary>
     public async Task<User> CreateUserAsync(UserRequest request)
     {
         using var response = await CreateAsync(request);

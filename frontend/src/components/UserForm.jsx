@@ -3,18 +3,18 @@ import { useState } from "react";
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.ru$/i;
 
 const FIELDS = [
-  { name: "name", label: "Имя", type: "text", placeholder: "Иван", autoComplete: "given-name" },
-  { name: "surname", label: "Фамилия", type: "text", placeholder: "Петров", autoComplete: "family-name" },
+  { name: "name", label: "Name", type: "text", placeholder: "John", autoComplete: "given-name" },
+  { name: "surname", label: "Surname", type: "text", placeholder: "Smith", autoComplete: "family-name" },
   { name: "email", label: "Email", type: "email", placeholder: "example@mail.ru", autoComplete: "email" },
 ];
 
 function validate({ name, surname, email }) {
   return {
-    name: name.trim().length >= 3 ? null : "Минимум 3 символа",
-    surname: surname.trim().length >= 3 ? null : "Минимум 3 символа",
+    name: name.trim().length >= 3 ? null : "At least 3 characters",
+    surname: surname.trim().length >= 3 ? null : "At least 3 characters",
     email: EMAIL_PATTERN.test(email.trim())
       ? null
-      : "Формат email должен быть @... и заканчиваться на .ru",
+      : "Email must contain @ and end with .ru",
   };
 }
 
@@ -89,10 +89,10 @@ export default function UserForm({ initial, submitLabel, onSubmit, onCancel }) {
 
       <div className="form-actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel}>
-          Отмена
+          Cancel
         </button>
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? "Сохранение…" : submitLabel}
+          {submitting ? "Saving…" : submitLabel}
         </button>
       </div>
     </form>

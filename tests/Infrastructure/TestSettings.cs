@@ -1,6 +1,6 @@
 namespace UserManagement.Tests.Infrastructure;
 
-/// <summary>Адреса тестируемого окружения. Переопределяются переменными окружения.</summary>
+/// <summary>URLs of the environment under test. Overridable via environment variables.</summary>
 public static class TestSettings
 {
     public static string BaseUrl { get; } = Read("BASE_URL", "http://localhost:5173");

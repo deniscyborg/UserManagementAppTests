@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace UserManagement.Tests.Infrastructure;
 
-/// <summary>Запоминает email созданных в тесте пользователей и удаляет их после теста.</summary>
+/// <summary>Remembers the emails of users created in a test and deletes them afterwards.</summary>
 public sealed class TestDataCleanup(UsersApiClient api)
 {
     private readonly ConcurrentBag<string> _emails = new();

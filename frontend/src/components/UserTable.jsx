@@ -4,7 +4,7 @@ function initials(user) {
 
 function formatDate(value) {
   if (!value) return "—";
-  return new Date(value).toLocaleString("ru-RU", {
+  return new Date(value).toLocaleString("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -19,20 +19,20 @@ export default function UserTable({ users, onEdit, onDelete }) {
       <table className="user-table">
         <thead>
           <tr>
-            <th>Логин</th>
-            <th>Имя</th>
-            <th>Фамилия</th>
+            <th>Login</th>
+            <th>Name</th>
+            <th>Surname</th>
             <th>Email</th>
-            <th>Дата посещения</th>
+            <th>Last visit</th>
             <th className="actions-col">
-              <span className="visually-hidden">Действия</span>
+              <span className="visually-hidden">Actions</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {users.map((user) => (
             <tr key={user.id} onDoubleClick={() => onEdit(user)}>
-              <td data-label="Логин">
+              <td data-label="Login">
                 <div className="user-cell">
                   <span className="avatar" aria-hidden="true">
                     {initials(user)}
@@ -40,10 +40,10 @@ export default function UserTable({ users, onEdit, onDelete }) {
                   <span className="login">{user.login}</span>
                 </div>
               </td>
-              <td data-label="Имя">{user.name}</td>
-              <td data-label="Фамилия">{user.surname}</td>
+              <td data-label="Name">{user.name}</td>
+              <td data-label="Surname">{user.surname}</td>
               <td data-label="Email" className="muted">{user.email}</td>
-              <td data-label="Дата посещения" className="muted">{formatDate(user.lastVisited)}</td>
+              <td data-label="Last visit" className="muted">{formatDate(user.lastVisited)}</td>
               <td className="actions">
                 <button
                   type="button"
@@ -51,14 +51,14 @@ export default function UserTable({ users, onEdit, onDelete }) {
                   className="btn btn-ghost btn-edit"
                   onClick={() => onEdit(user)}
                 >
-                  Изменить
+                  Edit
                 </button>
                 <button
                   type="button"
                   className="btn btn-ghost btn-delete"
                   onClick={() => onDelete(user)}
                 >
-                  Удалить
+                  Delete
                 </button>
               </td>
             </tr>

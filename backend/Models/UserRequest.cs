@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace backend.Models;
 
-/// <summary>Тело запроса на создание и изменение пользователя.</summary>
+/// <summary>Request body for creating and updating a user.</summary>
 public class UserRequest
 {
     [Required(ErrorMessage = "Name is required")]

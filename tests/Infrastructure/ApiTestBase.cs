@@ -21,6 +21,6 @@ public abstract class ApiTestBase
         Api.Dispose();
     }
 
-    /// <summary>Создаёт пользователя через API и регистрирует его на удаление.</summary>
+    /// <summary>Creates a user via the API and registers it for cleanup.</summary>
     protected Task<User> GivenUserAsync() => Api.CreateUserAsync(Cleanup.Track(UserFactory.Valid()));
 }

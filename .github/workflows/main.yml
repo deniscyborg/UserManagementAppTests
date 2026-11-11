@@ -86,7 +86,7 @@ jobs:
   report:
     name: Publish Allure report and showcase
     needs: test
-    # Отчёт публикуется и при упавших тестах — именно тогда он нужнее всего
+    # The report is published even when tests fail — that is when it matters most
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -103,8 +103,8 @@ jobs:
         run: |
           mkdir -p allure-results/history
           for f in history.json history-trend.json duration-trend.json categories-trend.json retry-trend.json; do
-            # http + --location работает и до, и после включения HTTPS;
-            # второй адрес — старый отчёт, лежавший в корне сайта
+            # http + --location works both before and after HTTPS is enabled;
+            # the second URL is the old report that used to live at the site root
             curl --silent --fail --location "http://report.usermanagementapp.com/allure/history/$f" -o "allure-results/history/$f" \
               || curl --silent --fail --location "http://report.usermanagementapp.com/history/$f" -o "allure-results/history/$f" \
               || echo "No previous $f"
@@ -170,7 +170,7 @@ jobs:
   deploy:
     name: Deploy application
     needs: test
-    # Приложение выкатывается только при зелёных тестах
+    # The app is deployed only when all tests are green
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15

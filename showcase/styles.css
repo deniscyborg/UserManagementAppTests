@@ -11,7 +11,7 @@
   --grid: #e1e0d9;
   --baseline: #c3c2b7;
 
-  /* Статусы прогона — фиксированная статусная палитра */
+  /* Run statuses — fixed status palette */
   --passed: #0ca30c;
   --failed: #d03b3b;
   --broken: #ec835a;

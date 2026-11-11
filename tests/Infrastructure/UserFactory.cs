@@ -1,16 +1,16 @@
 namespace UserManagement.Tests.Infrastructure;
 
-/// <summary>Генерирует валидных пользователей с уникальным email, чтобы тесты не мешали друг другу.</summary>
+/// <summary>Generates valid users with unique emails so tests don't interfere with each other.</summary>
 public static class UserFactory
 {
     private static readonly (string Name, string Surname)[] People =
     [
-        ("Алексей", "Иванов"),
-        ("Мария", "Смирнова"),
-        ("Дмитрий", "Козлов"),
-        ("Екатерина", "Новикова"),
-        ("Сергей", "Попов"),
-        ("Анна", "Морозова"),
+        ("Alex", "Johnson"),
+        ("Maria", "Schmidt"),
+        ("Daniel", "Weber"),
+        ("Kate", "Miller"),
+        ("Simon", "Fischer"),
+        ("Anna", "Becker"),
     ];
 
     public static UserRequest Valid()

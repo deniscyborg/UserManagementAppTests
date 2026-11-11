@@ -1,4 +1,4 @@
-// Живые данные витрины берутся из опубликованного рядом отчёта Allure.
+// Live showcase data comes from the Allure report published alongside.
 (() => {
   "use strict";
 
@@ -69,7 +69,7 @@
     return run.buildOrder ? `Run #${run.buildOrder}` : `Run ${index + 1}`;
   }
 
-  // Столбец со скруглённым верхом (4px) и прямым низом у базовой линии
+  // Bar with a rounded top (4px) and a flat bottom at the baseline
   function topRoundedRect(x, y, w, h, r) {
     const rr = Math.min(r, h, w / 2);
     return `M${x},${y + h} V${y + rr} Q${x},${y} ${x + rr},${y} H${x + w - rr} Q${x + w},${y} ${x + w},${y + rr} V${y + h} Z`;
@@ -114,7 +114,7 @@
       segments.forEach((s, index) => {
         const h = (run.data[s.key] / max) * plotH;
         const isTop = index === segments.length - 1;
-        // 2px зазор цвета фона между сегментами стопки
+        // 2px background-coloured gap between stacked segments
         const drawH = Math.max(h - (isTop ? 0 : gap), 1);
         y -= h;
         const top = y + (isTop ? 0 : gap);
@@ -131,7 +131,7 @@
         root.append(label);
       }
 
-      // Зона наведения шире столбца
+      // Hover area wider than the bar
       const hit = svg("rect", { class: "hit", x: pad.left + slot * i, y: pad.top, width: slot, height: plotH, tabindex: 0 });
       const show = () => {
         root.querySelectorAll(".col").forEach((c) => c.classList.toggle("dim", c !== group));
@@ -193,7 +193,7 @@
 
     try {
       const history = await fetchJson("history/history-trend.json");
-      $("trend").hidden = false; // нужен размер контейнера до отрисовки
+      $("trend").hidden = false; // container size is needed before drawing
       renderTrend(history);
       let resizeTimer;
       window.addEventListener("resize", () => {

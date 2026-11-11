@@ -19,7 +19,7 @@ pw-results/
 test-results/
 trace.zip
 
-# Node modules (если используешь JS Runner/TypeScript)
+# Node modules (when using a JS runner/TypeScript)
 node_modules/
 
 # Test configs/environment

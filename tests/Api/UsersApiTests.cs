@@ -12,7 +12,7 @@ public class UsersApiTests : ApiTestBase
     private const int MissingId = int.MaxValue;
 
     [Test]
-    [AllureStory("Получение списка")]
+    [AllureStory("Get list")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task GetAll_ReturnsCreatedUser()
     {
@@ -26,7 +26,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Создание")]
+    [AllureStory("Create")]
     [AllureSeverity(SeverityLevel.blocker)]
     public async Task Create_ValidUser_Returns201WithLocationAndBody()
     {
@@ -42,38 +42,38 @@ public class UsersApiTests : ApiTestBase
             Assert.That(created.Name, Is.EqualTo(request.Name));
             Assert.That(created.Surname, Is.EqualTo(request.Surname));
             Assert.That(created.Email, Is.EqualTo(request.Email));
-            Assert.That(created.Login, Is.EqualTo(UserFactory.LoginOf(request.Email)), "Логин = часть email до @");
+            Assert.That(created.Login, Is.EqualTo(UserFactory.LoginOf(request.Email)), "Login = part of the email before @");
             Assert.That(response.Headers.Location?.AbsolutePath, Does.EndWith($"/api/users/{created.Id}"));
         });
     }
 
     [Test]
-    [AllureStory("Создание")]
+    [AllureStory("Create")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Create_TrimsWhitespace()
     {
         var email = Cleanup.Track(UserFactory.UniqueEmail());
 
-        using var response = await Api.CreateAsync(new UserRequest("  Иван  ", " Петров ", $" {email} "));
+        using var response = await Api.CreateAsync(new UserRequest("  John  ", " Smith ", $" {email} "));
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Created));
         var created = await response.Content.ReadFromJsonAsync<User>();
-        Assert.That((created!.Name, created.Surname, created.Email), Is.EqualTo(("Иван", "Петров", email)));
+        Assert.That((created!.Name, created.Surname, created.Email), Is.EqualTo(("John", "Smith", email)));
     }
 
     private static IEnumerable<TestCaseData> InvalidRequests()
     {
         var email = "valid@test.ru";
-        yield return new TestCaseData(new { surname = "Петров", email }).SetName("Create_MissingName_Returns400");
-        yield return new TestCaseData(new UserRequest("Ив", "Петров", email)).SetName("Create_ShortName_Returns400");
-        yield return new TestCaseData(new UserRequest("Иван", "", email)).SetName("Create_EmptySurname_Returns400");
-        yield return new TestCaseData(new UserRequest("Иван", "Пе", email)).SetName("Create_ShortSurname_Returns400");
-        yield return new TestCaseData(new UserRequest("Иван", "Петров", "")).SetName("Create_EmptyEmail_Returns400");
-        yield return new TestCaseData(new UserRequest("Иван", "Петров", "not-an-email")).SetName("Create_InvalidEmail_Returns400");
+        yield return new TestCaseData(new { surname = "Smith", email }).SetName("Create_MissingName_Returns400");
+        yield return new TestCaseData(new UserRequest("Jo", "Smith", email)).SetName("Create_ShortName_Returns400");
+        yield return new TestCaseData(new UserRequest("John", "", email)).SetName("Create_EmptySurname_Returns400");
+        yield return new TestCaseData(new UserRequest("John", "Sm", email)).SetName("Create_ShortSurname_Returns400");
+        yield return new TestCaseData(new UserRequest("John", "Smith", "")).SetName("Create_EmptyEmail_Returns400");
+        yield return new TestCaseData(new UserRequest("John", "Smith", "not-an-email")).SetName("Create_InvalidEmail_Returns400");
     }
 
     [TestCaseSource(nameof(InvalidRequests))]
-    [AllureStory("Валидация")]
+    [AllureStory("Validation")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task Create_InvalidRequest_Returns400(object request)
     {
@@ -84,7 +84,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Валидация")]
+    [AllureStory("Validation")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task Create_DuplicateEmailIgnoringCase_Returns409()
     {
@@ -96,7 +96,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Получение по id")]
+    [AllureStory("Get by id")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task GetById_Existing_Returns200()
     {
@@ -109,7 +109,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Получение по id")]
+    [AllureStory("Get by id")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task GetById_Missing_Returns404()
     {
@@ -119,7 +119,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Изменение")]
+    [AllureStory("Update")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task Update_Existing_PersistsChangesAndRecalculatesLogin()
     {
@@ -133,23 +133,23 @@ public class UsersApiTests : ApiTestBase
         Assert.That(await response.Content.ReadFromJsonAsync<User>(), Is.EqualTo(expected));
 
         using var stored = await Api.GetByIdAsync(user.Id);
-        Assert.That(await stored.Content.ReadFromJsonAsync<User>(), Is.EqualTo(expected), "Изменения сохранены на сервере");
+        Assert.That(await stored.Content.ReadFromJsonAsync<User>(), Is.EqualTo(expected), "Changes are stored on the server");
     }
 
     [Test]
-    [AllureStory("Изменение")]
+    [AllureStory("Update")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Update_KeepingOwnEmail_Returns200()
     {
         var user = await GivenUserAsync();
 
-        using var response = await Api.UpdateAsync(user.Id, new UserRequest("Новое", "Имячко", user.Email));
+        using var response = await Api.UpdateAsync(user.Id, new UserRequest("Updated", "Name", user.Email));
 
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), "Свой же email не считается занятым");
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), "The user's own email does not count as taken");
     }
 
     [Test]
-    [AllureStory("Изменение")]
+    [AllureStory("Update")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Update_ToEmailOfAnotherUser_Returns409()
     {
@@ -162,7 +162,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Изменение")]
+    [AllureStory("Update")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Update_Missing_Returns404()
     {
@@ -172,19 +172,19 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Изменение")]
+    [AllureStory("Update")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Update_InvalidRequest_Returns400()
     {
         var user = await GivenUserAsync();
 
-        using var response = await Api.UpdateAsync(user.Id, new UserRequest("Иван", "Петров", "broken"));
+        using var response = await Api.UpdateAsync(user.Id, new UserRequest("John", "Smith", "broken"));
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
     }
 
     [Test]
-    [AllureStory("Удаление")]
+    [AllureStory("Delete")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task Delete_Existing_Returns204AndUserIsGone()
     {
@@ -198,7 +198,7 @@ public class UsersApiTests : ApiTestBase
     }
 
     [Test]
-    [AllureStory("Удаление")]
+    [AllureStory("Delete")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Delete_Missing_Returns404()
     {

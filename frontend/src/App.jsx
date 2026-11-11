@@ -47,7 +47,7 @@ export default function App() {
       const created = await usersApi.create(data);
       setUsers((prev) => [...prev, created]);
       setModal(null);
-      notify("success", "Пользователь добавлен");
+      notify("success", "User added");
     } catch (e) {
       notify("error", e.message);
     }
@@ -58,7 +58,7 @@ export default function App() {
       const updated = await usersApi.update(modal.user.id, data);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setModal(null);
-      notify("success", "Изменения сохранены");
+      notify("success", "Changes saved");
     } catch (e) {
       notify("error", e.message);
     }
@@ -68,7 +68,7 @@ export default function App() {
     try {
       await usersApi.remove(user.id);
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
-      notify("success", `Пользователь ${user.login} удалён`);
+      notify("success", `User ${user.login} deleted`);
     } catch (e) {
       notify("error", e.message);
     }
@@ -76,14 +76,14 @@ export default function App() {
 
   function renderContent() {
     if (status === "loading") {
-      return <div className="state">Загрузка…</div>;
+      return <div className="state">Loading…</div>;
     }
     if (status === "error") {
       return (
         <div className="state">
-          <p>Не удалось загрузить пользователей.</p>
+          <p>Could not load users.</p>
           <button type="button" className="btn btn-secondary" onClick={retryLoad}>
-            Повторить
+            Retry
           </button>
         </div>
       );
@@ -91,13 +91,13 @@ export default function App() {
     if (users.length === 0) {
       return (
         <div className="state">
-          <p className="state-title">Пользователей пока нет</p>
-          <p>Добавьте первого — он появится в этой таблице.</p>
+          <p className="state-title">No users yet</p>
+          <p>Add the first one — it will appear in this table.</p>
         </div>
       );
     }
     if (filtered.length === 0) {
-      return <div className="state">Никого не найдено по запросу «{filter}»</div>;
+      return <div className="state">No users match “{filter}”</div>;
     }
     return (
       <UserTable
@@ -113,13 +113,13 @@ export default function App() {
       <main className="card">
         <header className="card-header">
           <div>
-            <h1>Пользователи</h1>
+            <h1>Users</h1>
             <p className="subtitle">
-              {status === "ready" ? `Всего: ${users.length}` : "Управление учётными записями"}
+              {status === "ready" ? `Total: ${users.length}` : "Account management"}
             </p>
           </div>
           <button type="button" className="btn btn-primary" onClick={() => setModal({ mode: "add" })}>
-            <span aria-hidden="true">+</span> Добавить пользователя
+            <span aria-hidden="true">+</span> Add user
           </button>
         </header>
 
@@ -127,8 +127,8 @@ export default function App() {
           <input
             type="search"
             className="filter-input"
-            placeholder="Поиск по логину"
-            aria-label="Поиск по логину"
+            placeholder="Search by login"
+            aria-label="Search by login"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -139,12 +139,12 @@ export default function App() {
 
       {modal && (
         <Modal
-          title={modal.mode === "add" ? "Новый пользователь" : "Редактирование пользователя"}
+          title={modal.mode === "add" ? "New user" : "Edit user"}
           onClose={closeModal}
         >
           <UserForm
             initial={modal.user}
-            submitLabel={modal.mode === "add" ? "Добавить" : "Сохранить"}
+            submitLabel={modal.mode === "add" ? "Add" : "Save"}
             onSubmit={modal.mode === "add" ? handleAdd : handleEdit}
             onCancel={closeModal}
           />

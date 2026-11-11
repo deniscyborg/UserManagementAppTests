@@ -24,7 +24,7 @@ export default function Modal({ title, onClose, children }) {
       >
         <div className="modal-header">
           <h2 id="modal-title">{title}</h2>
-          <button type="button" className="icon-btn" aria-label="Закрыть" onClick={onClose}>
+          <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
             ×
           </button>
         </div>

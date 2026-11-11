@@ -5,7 +5,7 @@ namespace UserManagement.Tests.Ui;
 
 [AllureParentSuite("UI")]
 [AllureSuite("Users page")]
-[AllureFeature("Управление пользователями в браузере")]
+[AllureFeature("User management in the browser")]
 [AllureTag("ui", "e2e")]
 public class UsersUiTests : UiTestBase
 {
@@ -15,7 +15,7 @@ public class UsersUiTests : UiTestBase
     public void CreatePage() => _usersPage = new UsersPage(Page);
 
     [Test]
-    [AllureStory("Открытие страницы")]
+    [AllureStory("Open page")]
     [AllureSeverity(SeverityLevel.blocker)]
     public async Task Page_Opens_WithTitleAndControls()
     {
@@ -27,7 +27,7 @@ public class UsersUiTests : UiTestBase
     }
 
     [Test]
-    [AllureStory("Добавление")]
+    [AllureStory("Add")]
     [AllureSeverity(SeverityLevel.blocker)]
     public async Task AddUser_ValidData_AppearsInTableWithSuccessMessage()
     {
@@ -39,7 +39,7 @@ public class UsersUiTests : UiTestBase
         await dialog.SubmitAsync();
 
         await Expect(dialog.Root).ToBeHiddenAsync();
-        await Expect(_usersPage.SuccessToast).ToHaveTextAsync("Пользователь добавлен");
+        await Expect(_usersPage.SuccessToast).ToHaveTextAsync("User added");
         var row = _usersPage.Row(UserFactory.LoginOf(user.Email));
         await Expect(row).ToContainTextAsync(user.Name);
         await Expect(row).ToContainTextAsync(user.Surname);
@@ -48,16 +48,16 @@ public class UsersUiTests : UiTestBase
 
     private static IEnumerable<TestCaseData> InvalidInputs()
     {
-        yield return new TestCaseData("Ив", "Петров", "ivan@test.ru", "Минимум 3 символа")
+        yield return new TestCaseData("Jo", "Smith", "john@test.ru", "At least 3 characters")
             .SetName("AddUser_ShortName_ShowsValidationError");
-        yield return new TestCaseData("Иван", "Пе", "ivan@test.ru", "Минимум 3 символа")
+        yield return new TestCaseData("John", "Sm", "john@test.ru", "At least 3 characters")
             .SetName("AddUser_ShortSurname_ShowsValidationError");
-        yield return new TestCaseData("Иван", "Петров", "ivan@test.com", "Формат email должен быть @... и заканчиваться на .ru")
+        yield return new TestCaseData("John", "Smith", "john@test.com", "Email must contain @ and end with .ru")
             .SetName("AddUser_NonRuEmail_ShowsValidationError");
     }
 
     [TestCaseSource(nameof(InvalidInputs))]
-    [AllureStory("Валидация формы")]
+    [AllureStory("Form validation")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task AddUser_InvalidInput_ShowsErrorAndKeepsDialogOpen(string name, string surname, string email, string error)
     {
@@ -72,7 +72,7 @@ public class UsersUiTests : UiTestBase
     }
 
     [Test]
-    [AllureStory("Добавление")]
+    [AllureStory("Add")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task AddUser_DuplicateEmail_ShowsServerError()
     {
@@ -83,12 +83,12 @@ public class UsersUiTests : UiTestBase
         await dialog.FillAsync(UserFactory.Valid() with { Email = existing.Email });
         await dialog.SubmitAsync();
 
-        await Expect(_usersPage.ErrorToast).ToHaveTextAsync("Пользователь с таким email уже существует");
+        await Expect(_usersPage.ErrorToast).ToHaveTextAsync("A user with this email already exists");
         await Expect(dialog.Root).ToBeVisibleAsync();
     }
 
     [Test]
-    [AllureStory("Добавление")]
+    [AllureStory("Add")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task AddUser_Cancel_ClosesDialogWithoutCreatingUser()
     {
@@ -100,11 +100,11 @@ public class UsersUiTests : UiTestBase
         await dialog.CancelAsync();
 
         await Expect(dialog.Root).ToBeHiddenAsync();
-        Assert.That(await Api.FindByEmailAsync(user.Email), Is.Null, "Пользователь не должен создаться");
+        Assert.That(await Api.FindByEmailAsync(user.Email), Is.Null, "The user must not be created");
     }
 
     [Test]
-    [AllureStory("Добавление")]
+    [AllureStory("Add")]
     [AllureSeverity(SeverityLevel.minor)]
     public async Task Dialog_Escape_ClosesDialog()
     {
@@ -117,7 +117,7 @@ public class UsersUiTests : UiTestBase
     }
 
     [Test]
-    [AllureStory("Редактирование")]
+    [AllureStory("Edit")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task EditUser_ChangesAreShownInTable()
     {
@@ -130,13 +130,13 @@ public class UsersUiTests : UiTestBase
         await dialog.FillAsync(changes);
         await dialog.SubmitAsync();
 
-        await Expect(_usersPage.SuccessToast).ToHaveTextAsync("Изменения сохранены");
+        await Expect(_usersPage.SuccessToast).ToHaveTextAsync("Changes saved");
         await Expect(_usersPage.Row(user.Login)).ToHaveCountAsync(0);
         await Expect(_usersPage.Row(UserFactory.LoginOf(changes.Email))).ToContainTextAsync(changes.Email);
     }
 
     [Test]
-    [AllureStory("Удаление")]
+    [AllureStory("Delete")]
     [AllureSeverity(SeverityLevel.critical)]
     public async Task DeleteUser_RemovesRowAndUser()
     {
@@ -146,12 +146,12 @@ public class UsersUiTests : UiTestBase
         await _usersPage.DeleteAsync(user.Login);
 
         await Expect(_usersPage.Row(user.Login)).ToHaveCountAsync(0);
-        await Expect(_usersPage.SuccessToast).ToHaveTextAsync(new Regex($"{Regex.Escape(user.Login)} удалён"));
-        Assert.That(await Api.FindByEmailAsync(user.Email), Is.Null, "Пользователь удалён на сервере");
+        await Expect(_usersPage.SuccessToast).ToHaveTextAsync(new Regex($"{Regex.Escape(user.Login)} deleted"));
+        Assert.That(await Api.FindByEmailAsync(user.Email), Is.Null, "The user is deleted on the server");
     }
 
     [Test]
-    [AllureStory("Поиск")]
+    [AllureStory("Search")]
     [AllureSeverity(SeverityLevel.normal)]
     public async Task Search_ByLogin_ShowsOnlyMatchingRows()
     {
@@ -166,7 +166,7 @@ public class UsersUiTests : UiTestBase
     }
 
     [Test]
-    [AllureStory("Поиск")]
+    [AllureStory("Search")]
     [AllureSeverity(SeverityLevel.minor)]
     public async Task Search_NoMatches_ShowsEmptyState()
     {

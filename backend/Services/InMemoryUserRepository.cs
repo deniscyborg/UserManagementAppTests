@@ -3,8 +3,8 @@ using backend.Models;
 namespace backend.Services;
 
 /// <summary>
-/// Хранилище в памяти: данные живут до перезапуска процесса.
-/// Регистрируется как singleton, поэтому доступ защищён блокировкой.
+/// In-memory storage: data lives until the process restarts.
+/// Registered as a singleton, so access is guarded by a lock.
 /// </summary>
 public class InMemoryUserRepository : IUserRepository
 {

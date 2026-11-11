@@ -4,8 +4,8 @@ using NUnit.Framework.Interfaces;
 namespace UserManagement.Tests.Infrastructure;
 
 /// <summary>
-/// База UI-тестов: свой браузерный контекст на тест, трассировка Playwright
-/// и вложения в Allure (скриншот + trace.zip) при падении.
+/// Base for UI tests: a fresh browser context per test, Playwright tracing
+/// and Allure attachments (screenshot + trace.zip) on failure.
 /// </summary>
 [AllureNUnit]
 public abstract class UiTestBase : PageTest
@@ -16,7 +16,7 @@ public abstract class UiTestBase : PageTest
     public override BrowserNewContextOptions ContextOptions() => new()
     {
         BaseURL = TestSettings.BaseUrl,
-        Locale = "ru-RU",
+        Locale = "en-GB",
         ViewportSize = new ViewportSize { Width = 1280, Height = 800 },
     };
 
